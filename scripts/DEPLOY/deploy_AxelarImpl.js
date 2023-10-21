@@ -57,7 +57,7 @@ async function main () {
   const routeData = await crossSyncGatewayContract.getRoute(routeID)
   if(routeData[0] === "0x0000000000000000000000000000000000000000") {
     console.log(`Adding ${ImplName} Route to CrossSyncGateway`)
-    const tx1 = await crossSyncGatewayContract.addRoute(routeID, implContract.address, "AXELAR")
+    const tx1 = await crossSyncGatewayContract.addRoute(routeID, implContract.address, ImplName)
     await tx1.wait()
     console.log(tx1.hash)
     console.log(`Added ${ImplName} Impl route to CrossSync Gateway with id ${routeID}`)

@@ -32,7 +32,7 @@ async function main () {
   await crossSyncGatewayContract.deployed()
 
   await saveToConfig(`CrossSyncGateway`, 'ADDRESS', crossSyncGatewayContract.address, chainId)
-  console.log('Singularity CrossSyncGateway contract deployed to:', crossSyncGatewayContract.address, ` on ${CHAIN_NAME}`)
+  console.log('CrossSyncGateway contract deployed to:', crossSyncGatewayContract.address, ` on ${CHAIN_NAME}`)
 
   console.log('Verifying CrossSyncGateway Contract...')
   try {
