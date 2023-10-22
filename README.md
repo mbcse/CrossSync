@@ -5,7 +5,7 @@ Cross Chain Messaging Aggregator Protocol
 
 
 Detailed Bigger Demo Link :
-![Detailed Demo](https://www.loom.com/share/378283b419c7410e9852169f49378115?sid=d9b22c53-7553-4982-ad56-c75ca74c8092)
+<div style="position: relative; padding-bottom: 56.25%; height: 0;"><iframe src="https://www.loom.com/embed/378283b419c7410e9852169f49378115?sid=4d8f6c41-9434-46df-a1d5-d1cb8ef118d6" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
 
 
 ## About
