@@ -1,0 +1,40 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "HyperlaneMailBox",
+  "sourceName": "contracts/MessagingImpls/HyperlaneImpl.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "_destination",
+          "type": "uint32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_recipient",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_body",
+          "type": "bytes"
+        }
+      ],
+      "name": "dispatch",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

@@ -1,0 +1,84 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IWormholeRelayer",
+  "sourceName": "contracts/MessagingImpls/WormholeImpl.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint16",
+          "name": "targetChain",
+          "type": "uint16"
+        },
+        {
+          "internalType": "uint256",
+          "name": "receiverValue",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "gasLimit",
+          "type": "uint256"
+        }
+      ],
+      "name": "quoteEVMDeliveryPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "nativePriceQuote",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "targetChainRefundPerGasUnused",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint16",
+          "name": "targetChain",
+          "type": "uint16"
+        },
+        {
+          "internalType": "address",
+          "name": "targetAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "payload",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256",
+          "name": "receiverValue",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "gasLimit",
+          "type": "uint256"
+        }
+      ],
+      "name": "sendPayloadToEvm",
+      "outputs": [
+        {
+          "internalType": "uint64",
+          "name": "sequence",
+          "type": "uint64"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

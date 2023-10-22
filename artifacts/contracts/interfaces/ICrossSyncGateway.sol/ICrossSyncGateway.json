@@ -1,0 +1,51 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ICrossSyncGateway",
+  "sourceName": "contracts/interfaces/ICrossSyncGateway.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_destinationChainId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_routeId",
+          "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct ICrossSyncGateway.MessagingPayload",
+          "name": "_payload",
+          "type": "tuple"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_routeData",
+          "type": "bytes"
+        }
+      ],
+      "name": "sendMessage",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

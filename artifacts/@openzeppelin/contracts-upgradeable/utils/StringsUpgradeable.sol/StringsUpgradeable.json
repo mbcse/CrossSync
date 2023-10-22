@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "StringsUpgradeable",
+  "sourceName": "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol",
+  "abi": [],
+  "bytecode": "0x60808060405234601757603a9081601d823930815050f35b600080fdfe600080fdfea2646970667358221220b7f8fb8824c12d5bad06367daa996c883bc33c6736527d46971e652d5fb9a66e64736f6c63430008110033",
+  "deployedBytecode": "0x600080fdfea2646970667358221220b7f8fb8824c12d5bad06367daa996c883bc33c6736527d46971e652d5fb9a66e64736f6c63430008110033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
