@@ -64,3 +64,9 @@ interface ICrossSyncReceiverImplementer {
 https://github.com/mbcse/CrossSync/blob/main/contractAddresses.json
 
 
+## Future Plans
+- Implement Auto Routing
+- Implement Token and Other sends
+- Implement Common Relayer Fee
+- Implement Pay in any token Functionality
+- Launch for public use
