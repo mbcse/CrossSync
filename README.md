@@ -4,8 +4,10 @@ Cross Chain Messaging Aggregator Protocol
 ![Architecture](./crossSync.png)
 
 
-Detailed Bigger Demo Link :
-<div style="position: relative; padding-bottom: 56.25%; height: 0;"><iframe src="https://www.loom.com/embed/378283b419c7410e9852169f49378115?sid=4d8f6c41-9434-46df-a1d5-d1cb8ef118d6" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
+### Detailed Bigger Demo Link :
+https://www.loom.com/share/378283b419c7410e9852169f49378115?sid=679c6298-b646-47df-a052-82bd81c053a2
+
+
 
 
 ## About
