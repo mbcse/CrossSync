@@ -15,6 +15,13 @@ CrossSync Protocol is a cross-chain messaging aggregator protocol. You may have 
 
 To address these challenges and provide a common Interface and Gateway for interacting with multiple messaging interoperability protocols CrossSync has been made, With this users only need to implement and interact with CrossSync Protocol Gateway. They have to call the sendMessage function of the CrossSync Gateway and specify the route ID for sending messages, for example, 1 for Using Axelar, 2 for CCIP, 3 for Connext, 4 for Hyperlane, and 5 for Wormhole. CrossSync Protocol handles the rest and converts all the payload into the payload required for the messenger protocol, you don't have to bother about different kinds of domain IDs, chain names, etc. Additionally, users no longer have to implement individual interfaces to receive messages on the destination chain. A single receiveMessage function is all they need to integrate for receiving the payload.
 
+### Benefits 
+- A common relayer fee makes it easy for developers to integrate any of these protocols with ease and less hassle.
+- Many of these protocols are available on different kinds of chains, ones you combine all of them into same protocol, you can have cross chain messaging available on almost all chains now
+- With Auto Routing users get the lowest fees for cross chain call if many protocols are available on same chain.
+- The design of this protocol has be kept modular, any protocol can be integrated easily by just deploying implementation contract for it.
+- This protocol benefits users as well as developers from the percepective of UI, Fees, ease of using, ease of integrating, etc.
+
 This protocol is available on Polygon ZKEVM, Mantle Testnet, Scroll Testnet, Goerli, Sepolia, and Mumbai. All contract addresses and abi and details are present in the GitHub repo.
 
 ## Testing 
