@@ -71,6 +71,15 @@ interface ICrossSyncReceiverImplementer {
 https://github.com/mbcse/CrossSync/blob/main/contractAddresses.json
 
 
+## Transaction hashes and proofs of working
+All these destination contract calls were done through crossSync Gateway.
+- Axelar : https://testnet.axelarscan.io/gmp/0x60917f0de99db08d7d95f4939ac17462456c5de9e3a87a5c0e91cb72b9d04e8d
+- Wormhole: https://wormholescan.io/#/tx/9bd69d2c44b89264b927e50922d7879e7e97a708d65320c9c09295daf130fac2?network=TESTNET
+- Connext: https://testnet.connextscan.io/tx/0xff380364ce68512503f310c878f49d882dc6c48da220678b07cb1a4e41422857
+- Chainlink CCIP : https://ccip.chain.link/msg/0x657a8c3824e66d734eb03c9d722251cb1757169d9e7af52e4d7d370e521c0f45
+- Hyperlane: https://explorer.hyperlane.xyz/message/0xa77b91fc04c9071c277e0048fe60bc957b7faab48e067eaece7ec2eade3306ce
+
+
 ## Future Plans
 - Implement Auto Routing
 - Implement Token and Other sends
