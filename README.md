@@ -1,7 +1,12 @@
 # CrossSync Protocol
 Cross Chain Messaging Aggregator Protocol
 
-Detailed Bigger Demo Link : https://www.loom.com/share/378283b419c7410e9852169f49378115?sid=d9b22c53-7553-4982-ad56-c75ca74c8092
+![Architecture](./crossSync.png)
+
+
+Detailed Bigger Demo Link :
+![Detailed Demo](https://www.loom.com/share/378283b419c7410e9852169f49378115?sid=d9b22c53-7553-4982-ad56-c75ca74c8092)
+
 
 ## About
 CrossSync Protocol is a cross-chain messaging aggregator protocol. You may have used Hyperlane, Connext, Wormhole, Axelar, Chainlink CCIP, etc, but these protocols come with various challenges for developers and users. Firstly, they support different types of chains, one is available on some chains and another on some other chains. They also have syntax differences. To integrate one, two, or even three of them, developers need to implement numerous interfaces and understand the workings of the underlying protocol, relayer fees, etc.
@@ -23,7 +28,7 @@ This protocol is available on Polygon ZKEVM, Mantle Testnet, Scroll Testnet, Goe
 ## CrossSync Gateway Interfaces
 
 ### For Sending Message/Call Contract on Destination Chain
-`
+```
 interface ICrossSyncGateway {
 
     struct MessagingPayload{
@@ -38,10 +43,10 @@ interface ICrossSyncGateway {
         bytes calldata _routeData
     ) external payable;
 }
-`
+```
 
 ### For Receiving Message on Destination Chain
-`
+```
 interface ICrossSyncReceiverImplementer {
 
     function receiveMessage(
@@ -50,7 +55,7 @@ interface ICrossSyncReceiverImplementer {
         bytes calldata _payload
     ) external payable ;          
 }
-`
+```
 
 ## Networks
 - Hyperlane : chains -> Polygon ZKEvm 1442, Mantle Testnet 5001
