@@ -7,12 +7,27 @@ pragma abicoder v2;
 import './interfaces/IMessagingImplBase.sol';
 import {IRouterClient} from "@chainlink/contracts-ccip/src/v0.8/ccip/interfaces/IRouterClient.sol";
 import {Client} from "@chainlink/contracts-ccip/src/v0.8/ccip/libraries/Client.sol";
+import "@openzeppelin/contracts/interfaces/IERC165.sol";
+import '../interfaces/ICrossSyncGateway.sol';
 
+//Chainlink CCIP Interface
+interface IAny2EVMMessageReceiver {
+  /// @notice Called by the Router to deliver a message.
+  /// If this reverts, any token transfers also revert. The message
+  /// will move to a FAILED state and become available for manual execution.
+  /// @param message CCIP Message
+  /// @dev Note ensure you check the msg.sender is the OffRampRouter
+  function ccipReceive(Client.Any2EVMMessage calldata message) external;
+}
 
 contract ChainlinkCCIPImpl is IMessagingImplBase {
     IRouterClient public chainlinkCcipRouter;
 
     mapping(uint256 => uint64) public chainlinkCcipChainSelector;
+    mapping(uint64 => uint256) public chainlinkCcipChainSelectorToChainId;
+    mapping(uint256 => address) public chainlinkCcipChainImplAddress;
+
+    mapping(bytes32 => mapping(bytes32 =>bool)) public messageSeen;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -68,8 +83,27 @@ contract ChainlinkCCIPImpl is IMessagingImplBase {
     }
 
     // Setter function for updating values in chainlinkCcipChainSelector mapping
-    function setChainlinkCcipChainSelector(uint256 _chainId, uint64 _chainSelector) public onlySuperAdmin{
+    function setChainlinkCcipChainSelector(uint256 _chainId, uint64 _chainSelector) public onlySuperAdmin {
         chainlinkCcipChainSelector[_chainId] = _chainSelector;
+        chainlinkCcipChainSelectorToChainId[_chainSelector] = _chainId;
+    }
+
+    // Chainlink CCIP Receiver
+    function ccipReceive(Client.Any2EVMMessage calldata message) external nonReentrant{
+        require(_msgSender() == address(chainlinkCcipRouter), 'Only ChainlinkCCIPRouter can call this function');
+        
+        bytes32 payloadHash = keccak256(message.data);
+        require(!messageSeen[message.messageId][payloadHash], 'Message Already Seen!');
+        messageSeen[message.messageId][payloadHash] = true;
+        
+        address sender = abi.decode(message.sender, (address));
+        require(sender == chainlinkCcipChainImplAddress[chainlinkCcipChainSelectorToChainId[message.sourceChainSelector]], 'Only ChainlinkCCIPImpl can call this function');
+        ICrossSyncGateway(crossSyncGatewayAddress).handleReceive(message.data);
+    }
+
+    // Interface support for CCIP chainlink Receive
+    function supportsInterface(bytes4 interfaceId) public pure override returns (bool) {
+        return interfaceId == type(IAny2EVMMessageReceiver).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
 
 }

@@ -3,7 +3,9 @@
 pragma solidity ^0.8.17;
 pragma abicoder v2;
 
-interface ICrossSyncGateway {
+import './ICrossSyncReceiver.sol';
+
+interface ICrossSyncGateway is ICrossSyncReceiver {
 
     struct MessagingPayload{
         address to;
@@ -16,8 +18,6 @@ interface ICrossSyncGateway {
         MessagingPayload calldata _payload,
         bytes calldata _routeData
     ) external payable;
-
- 
-  
-        
+    
+       
 }

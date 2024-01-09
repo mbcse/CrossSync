@@ -6,12 +6,18 @@ pragma abicoder v2;
 
 import './interfaces/IMessagingImplBase.sol';
 import {IConnext} from "@connext/interfaces/core/IConnext.sol";
+import '../interfaces/ICrossSyncGateway.sol';
 
 contract ConnextImpl is IMessagingImplBase {
 
    IConnext public connext;
 
    mapping(uint256 => uint32) public connextDestDomain;
+   mapping(uint32 => uint256) public connextDestDomainToChainId;
+   mapping(uint256 => address) public connextChainImplAddress;
+
+   mapping(bytes32 => mapping(bytes32 =>bool)) public messageSeen;
+
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -45,5 +51,25 @@ contract ConnextImpl is IMessagingImplBase {
 
     function setConnextDestChainDomain(uint256 _chainId, uint32 _chainDomain) public onlySuperAdmin{
         connextDestDomain[_chainId] = _chainDomain;
+        connextDestDomainToChainId[_chainDomain] = _chainId;
     }
+
+    // Connext Receiver
+    function xReceive(
+        bytes32 _transferId,
+        uint256 _amount,
+        address _asset,
+        address _originSender,
+        uint32 _origin,
+        bytes calldata _callData
+    ) public nonReentrant returns (bytes memory) {
+        require(msg.sender == address(connext), 'ConnextImpl: Only Connext can call this function');
+        require(_originSender == connextChainImplAddress[connextDestDomainToChainId[_origin]], 'ConnextImpl: Origin domain is not registered');
+
+        bytes32 payloadHash = keccak256(_callData);
+        require(!messageSeen[_transferId][payloadHash], ' Message already seen!');
+        messageSeen[_transferId][payloadHash] = true;
+
+        ICrossSyncGateway(crossSyncGatewayAddress).handleReceive(_callData);
+    }  
 }

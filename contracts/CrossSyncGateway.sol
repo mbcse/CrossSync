@@ -23,7 +23,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import "./helpers/ERC2771Recipient.sol";
 import "./interfaces/ICrossSyncGateway.sol";
-import "./interfaces/ICrossSyncReceiver.sol";
 
 import "./interfaces/IMessagingImpl.sol";
 import "./interfaces/ICrossSyncReceiverImplementer.sol";
@@ -40,7 +39,7 @@ interface IWETH9 {
 }
 
 
-contract CrossSyncGateway is ICrossSyncGateway, ICrossSyncReceiver, Initializable, OwnableUpgradeable, ERC2771Recipient, PausableUpgradeable, AccessControlUpgradeable, ReentrancyGuardUpgradeable, EIP712Upgradeable, UUPSUpgradeable {
+contract CrossSyncGateway is ICrossSyncGateway, Initializable, OwnableUpgradeable, ERC2771Recipient, PausableUpgradeable, AccessControlUpgradeable, ReentrancyGuardUpgradeable, EIP712Upgradeable, UUPSUpgradeable {
 
     bytes32 public constant SUPER_ADMIN_ROLE = keccak256("SUPER_ADMIN_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
@@ -58,7 +57,8 @@ contract CrossSyncGateway is ICrossSyncGateway, ICrossSyncReceiver, Initializabl
 
     mapping (uint256 => RouteData) private routes;
     mapping (uint256 => address) public destChainGatewayAddress;
-    mapping (address => uint256) public userNonce;
+    mapping (address => mapping(uint256 => mapping(uint256 => uint256))) public sentUserNonce; //address => srcChainId => destChainId => nonce
+    mapping (address => mapping(uint256 => mapping(uint256 => bool))) public receiveUserNonceSeen; //address => srcChainId => nonce => bool
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -273,24 +273,33 @@ contract CrossSyncGateway is ICrossSyncGateway, ICrossSyncReceiver, Initializabl
 
 /*
 *********************************************************  Gateway Functions ***********************************************************************
-*/    
+*/   
 
-    function _handleReceive(bytes calldata _payload) internal override {
+    function handleReceive(
+        bytes calldata _payload
+    ) external override nonReentrant{
+        _handleReceive(_payload);
+    }
+
+    function _handleReceive(bytes calldata _payload) internal {
         IMessagingImpl.ICrossSyncMessagingData memory decodePayload = abi.decode(_payload, (IMessagingImpl.ICrossSyncMessagingData));
-        require(decodePayload.destinationChainId == block.chainid, "Destination Chain Id is not same as current chain id");
-        require(decodePayload.destinationGatewayAddress == address(this), "Destinatin Gateway Address is not same as current gateway address");
-        require(decodePayload.sourceChainId != block.chainid, "Source and Destination Chain Ids are same");
-        require(decodePayload.sourceGatewayAddress != address(this), "Source Gateway Address is same as current gateway address");
+        require(decodePayload.destinationChainId == block.chainid, 'Destination Chain Id is not same as current chain id');
+        require(decodePayload.destinationGatewayAddress == _msgSender() && routes[decodePayload.messagingRouteId].routeAddress == _msgSender(), 'Destinatin Gateway Address(The Impl) is not the caller to gateway or is not a route address');
 
-        ICrossSyncReceiverImplementer(decodePayload.payload.to).receiveMessage(decodePayload.sourceChainId,
+        require(!receiveUserNonceSeen[decodePayload.sender][decodePayload.sourceChainId][decodePayload.nonce], 'Receive Users Nonce is already seen for this src Chain Id');
+        receiveUserNonceSeen[decodePayload.sender][decodePayload.sourceChainId][decodePayload.nonce] = true;
+
+        ICrossSyncReceiverImplementer(decodePayload.payload.to).receiveMessage(
+            decodePayload.sourceChainId,
             decodePayload.sender,
-            decodePayload.payload.data);            
+            decodePayload.payload.data
+        );            
     }
 
     function sendMessage( uint256 _destinationChainId,
         uint256 _routeId,
         ICrossSyncGateway.MessagingPayload memory _payload,
-        bytes calldata _routeData) override public payable {
+        bytes calldata _routeData) override public payable nonReentrant {
         require(routes[_routeId].isValid, "Route Does Not Exist");
         require(_payload.to != address(0), "Address 0 Provided");
         require(_destinationChainId != block.chainid, "Source and Destination Chain Ids are same");
@@ -300,7 +309,7 @@ contract CrossSyncGateway is ICrossSyncGateway, ICrossSyncReceiver, Initializabl
 
         IMessagingImpl.ICrossSyncMessagingData memory crossSyncPayload = IMessagingImpl.ICrossSyncMessagingData(
             _msgSender(),
-            userNonce[_msgSender()],
+            sentUserNonce[_msgSender()][block.chainid][_destinationChainId],
             _routeId,
             block.chainid,
             _destinationChainId,
@@ -309,7 +318,7 @@ contract CrossSyncGateway is ICrossSyncGateway, ICrossSyncReceiver, Initializabl
             _payload
         );
 
-        userNonce[_msgSender()] += 1;
+        sentUserNonce[_msgSender()][block.chainid][_destinationChainId] += 1;
 
         IMessagingImpl messenger = IMessagingImpl(routes[_routeId].routeAddress);
         messenger.executeSendMessage{value: msg.value}(crossSyncPayload);
@@ -379,7 +388,7 @@ contract CrossSyncGateway is ICrossSyncGateway, ICrossSyncReceiver, Initializabl
         _grantRole(DEFAULT_ADMIN_ROLE, _owner);
     }
      
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ICrossSyncReceiver, AccessControlUpgradeable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControlUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
    receive() external payable {}

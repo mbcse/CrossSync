@@ -5,6 +5,7 @@ pragma abicoder v2;
 
 
 import './interfaces/IMessagingImplBase.sol';
+import '../interfaces/ICrossSyncGateway.sol';
 
 interface IWormholeRelayer {
     function sendPayloadToEvm(
@@ -31,6 +32,10 @@ contract WormholeImpl is IMessagingImplBase {
     IWormholeRelayer public wormholeRelayer;
 
     mapping(uint256 => uint16) public wormholeChainId;
+    mapping(uint16 => uint256) public wormholeChainIdToChainId;
+    mapping(uint256 => address) public wormholeChainImplAddress;
+
+   mapping(bytes32 => mapping(bytes32 =>bool)) public messageSeen;
 
     uint256 GAS_LIMIT;
 
@@ -66,6 +71,7 @@ contract WormholeImpl is IMessagingImplBase {
     // Setter function for updating values in wormholeChainId mapping
     function setWormholeChainId(uint256 _chainId, uint16 _wormholeChainId) public onlySuperAdmin{
         wormholeChainId[_chainId] = _wormholeChainId;
+        wormholeChainIdToChainId[_wormholeChainId] = _chainId;
     }
 
 
@@ -81,6 +87,30 @@ contract WormholeImpl is IMessagingImplBase {
 
         // Total cost: delivery cost + cost of publishing the 'sending token' wormhole message
         cost = deliveryCost + 0;
+    }
+
+
+    // WormHole Receiver 
+    function receiveWormholeMessages(
+        bytes calldata payload,
+        bytes[] memory additionalVaas,
+        bytes32 sourceAddress,
+        uint16 sourceChain,
+        bytes32 deliveryHash
+    ) external payable nonReentrant{
+        require(msg.sender == address(wormholeRelayer), 'WormholeImpl: Only WormholeRelayer can call this function');
+        require(sourceAddress == addressToBytes32(wormholeChainImplAddress[wormholeChainIdToChainId[sourceChain]]), 'WormholeImpl: Invalid source address');
+        
+        bytes32 payloadHash  = keccak256(payload);
+        require(!messageSeen[deliveryHash][payloadHash], 'Message already seen!');
+        messageSeen[deliveryHash][payloadHash] = true;
+
+        ICrossSyncGateway(crossSyncGatewayAddress).handleReceive(payload);
+    }
+
+
+    function addressToBytes32(address _addr) internal pure returns (bytes32) {
+        return bytes32(uint256(uint160(_addr)));
     }
 
 }

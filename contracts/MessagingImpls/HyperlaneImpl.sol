@@ -4,64 +4,179 @@ pragma solidity ^0.8.4;
 pragma abicoder v2;
 
 import './interfaces/IMessagingImplBase.sol';
- 
+import '../interfaces/ICrossSyncGateway.sol';
+
 interface HyperlaneMailBox {
+    function quoteDispatch(
+        uint32 destination,
+        bytes32 recipient,
+        bytes memory body,
+        bytes calldata defaultHookMetadata
+    ) external returns (uint256 fee);
     function dispatch(
-        uint32 _destination,
-        bytes32 _recipient,
+        uint32 destination,
+        bytes32 recipient,
+        bytes memory body,
+        bytes calldata defaultHookMetadata
+    ) external payable; // will revert if msg.value < quoted fee
+}
+
+//Hyperlane Recieve interface
+interface IMessageRecipient {
+    /**
+     * @notice Handle an interchain message
+     * @param _origin Domain ID of the chain from which the message came
+     * @param _sender Address of the message sender on the origin chain as bytes32
+     * @param _body Raw bytes content of message body
+     */
+    function handle(
+        uint32 _origin,
+        bytes32 _sender,
         bytes calldata _body
-    ) external returns (bytes32);
+    ) external;
 }
 
 
-interface IInterchainGasPaymaster {
-    /**
-     * @notice Emitted when a payment is made for a message's gas costs.
-     * @param messageId The ID of the message to pay for.
-     * @param gasAmount The amount of destination gas paid for.
-     * @param payment The amount of native tokens paid.
-     */
-    event GasPayment(
-        bytes32 indexed messageId,
-        uint256 gasAmount,
-        uint256 payment
-    );
+
+library StandardHookMetadata {
+    uint8 private constant VARIANT_OFFSET = 0;
+    uint8 private constant MSG_VALUE_OFFSET = 2;
+    uint8 private constant GAS_LIMIT_OFFSET = 34;
+    uint8 private constant REFUND_ADDRESS_OFFSET = 66;
+    uint256 private constant MIN_METADATA_LENGTH = 86;
+
+    uint16 public constant VARIANT = 1;
 
     /**
-     * @notice Deposits msg.value as a payment for the relaying of a message
-     * to its destination chain.
-     * @dev Overpayment will result in a refund of native tokens to the _refundAddress.
-     * Callers should be aware that this may present reentrancy issues.
-     * @param _messageId The ID of the message to pay for.
-     * @param _destinationDomain The domain of the message's destination chain.
-     * @param _gasAmount The amount of destination gas to pay for.
-     * @param _refundAddress The address to refund any overpayment to.
+     * @notice Returns the variant of the metadata.
+     * @param _metadata ABI encoded global hook metadata.
+     * @return variant of the metadata as uint8.
      */
-    function payForGas(
-        bytes32 _messageId,
-        uint32 _destinationDomain,
-        uint256 _gasAmount,
+    function variant(bytes calldata _metadata) internal pure returns (uint16) {
+        if (_metadata.length < VARIANT_OFFSET + 2) return 0;
+        return uint16(bytes2(_metadata[VARIANT_OFFSET:VARIANT_OFFSET + 2]));
+    }
+
+    /**
+     * @notice Returns the specified value for the message.
+     * @param _metadata ABI encoded global hook metadata.
+     * @param _default Default fallback value.
+     * @return Value for the message as uint256.
+     */
+    function msgValue(
+        bytes calldata _metadata,
+        uint256 _default
+    ) internal pure returns (uint256) {
+        if (_metadata.length < MSG_VALUE_OFFSET + 32) return _default;
+        return
+            uint256(bytes32(_metadata[MSG_VALUE_OFFSET:MSG_VALUE_OFFSET + 32]));
+    }
+
+    /**
+     * @notice Returns the specified gas limit for the message.
+     * @param _metadata ABI encoded global hook metadata.
+     * @param _default Default fallback gas limit.
+     * @return Gas limit for the message as uint256.
+     */
+    function gasLimit(
+        bytes calldata _metadata,
+        uint256 _default
+    ) internal pure returns (uint256) {
+        if (_metadata.length < GAS_LIMIT_OFFSET + 32) return _default;
+        return
+            uint256(bytes32(_metadata[GAS_LIMIT_OFFSET:GAS_LIMIT_OFFSET + 32]));
+    }
+
+    /**
+     * @notice Returns the specified refund address for the message.
+     * @param _metadata ABI encoded global hook metadata.
+     * @param _default Default fallback refund address.
+     * @return Refund address for the message as address.
+     */
+    function refundAddress(
+        bytes calldata _metadata,
+        address _default
+    ) internal pure returns (address) {
+        if (_metadata.length < REFUND_ADDRESS_OFFSET + 20) return _default;
+        return
+            address(
+                bytes20(
+                    _metadata[REFUND_ADDRESS_OFFSET:REFUND_ADDRESS_OFFSET + 20]
+                )
+            );
+    }
+
+    /**
+     * @notice Returns the specified refund address for the message.
+     * @param _metadata ABI encoded global hook metadata.
+     * @return Refund address for the message as address.
+     */
+    function getCustomMetadata(
+        bytes calldata _metadata
+    ) internal pure returns (bytes calldata) {
+        if (_metadata.length < MIN_METADATA_LENGTH) return _metadata[0:0];
+        return _metadata[MIN_METADATA_LENGTH:];
+    }
+
+    /**
+     * @notice Formats the specified gas limit and refund address into global hook metadata.
+     * @param _msgValue msg.value for the message.
+     * @param _gasLimit Gas limit for the message.
+     * @param _refundAddress Refund address for the message.
+     * @param _customMetadata Additional metadata to include in the global hook metadata.
+     * @return ABI encoded global hook metadata.
+     */
+    function formatMetadata(
+        uint256 _msgValue,
+        uint256 _gasLimit,
+        address _refundAddress,
+        bytes memory _customMetadata
+    ) internal pure returns (bytes memory) {
+        return
+            abi.encodePacked(
+                VARIANT,
+                _msgValue,
+                _gasLimit,
+                _refundAddress,
+                _customMetadata
+            );
+    }
+
+    /**
+     * @notice Formats the specified gas limit and refund address into global hook metadata.
+     * @param _msgValue msg.value for the message.
+     * @return ABI encoded global hook metadata.
+     */
+    function formatMetadata(
+        uint256 _msgValue
+    ) internal view returns (bytes memory) {
+        return formatMetadata(_msgValue, uint256(0), msg.sender, "");
+    }
+
+    /**
+     * @notice Formats the specified gas limit and refund address into global hook metadata.
+     * @param _gasLimit Gas limit for the message.
+     * @param _refundAddress Refund address for the message.
+     * @return ABI encoded global hook metadata.
+     */
+    function formatMetadata(
+        uint256 _gasLimit,
         address _refundAddress
-    ) external payable;
-
-    /**
-     * @notice Quotes the amount of native tokens to pay for interchain gas.
-     * @param _destinationDomain The domain of the message's destination chain.
-     * @param _gasAmount The amount of destination gas to pay for.
-     * @return The amount of native tokens required to pay for interchain gas.
-     */
-    function quoteGasPayment(uint32 _destinationDomain, uint256 _gasAmount)
-        external
-        view
-        returns (uint256);
+    ) internal pure returns (bytes memory) {
+        return formatMetadata(uint256(0), _gasLimit, _refundAddress, "");
+    }
 }
 
-contract HyperlaneImpl is IMessagingImplBase {
+
+contract HyperlaneImpl is IMessagingImplBase, IMessageRecipient {
     HyperlaneMailBox public hyperlaneMailBox;
-    IInterchainGasPaymaster public  hyperlaneInterchainGasPaymaster;
-    uint256 GAS_LIMIT;
+    uint256 public GAS_LIMIT;
 
     mapping(uint256 => uint32) public hyperlaneChainDomain;
+    mapping(uint32 => uint256) public hyperlaneChainDomainToChainId;
+    mapping(uint256 => address) public hyperlaneChainImplAddress;
+
+    mapping(bytes32 => bool) private messageSeen;
 
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -72,7 +187,6 @@ contract HyperlaneImpl is IMessagingImplBase {
     function initialize(address _crossSyncGatewayAddress, address _nativeCurrencyWrappedAddress, address _nativeCurrencyAddress, address _owner, address _hyperlaneMailBoxAddress, address _hyperlaneGasPaymasterAddress) public initializer {
         IMessagingImplBase_init(_crossSyncGatewayAddress, _nativeCurrencyWrappedAddress, _nativeCurrencyAddress, _owner);
         hyperlaneMailBox = HyperlaneMailBox(_hyperlaneMailBoxAddress);
-        hyperlaneInterchainGasPaymaster = IInterchainGasPaymaster(_hyperlaneGasPaymasterAddress);
         GAS_LIMIT = 50_000;
     }
 
@@ -82,17 +196,11 @@ contract HyperlaneImpl is IMessagingImplBase {
         require(msg.value > 0, 'Gas payment is required');
         bytes memory payload = abi.encode(_data);
        
-        bytes32 messageId = hyperlaneMailBox.dispatch(hyperlaneChainDomain[_data.destinationChainId], addressToBytes32(_data.destinationGatewayAddress), payload);
+        address refundAddress = address(crossSyncGatewayAddress);
+        uint256 quote = hyperlaneMailBox.quoteDispatch(hyperlaneChainDomain[_data.destinationChainId], addressToBytes32(_data.destinationGatewayAddress), payload, StandardHookMetadata.formatMetadata(GAS_LIMIT, refundAddress));
+        require(address(this).balance >= quote, 'Insufficient funds to send message');
+        hyperlaneMailBox.dispatch{value: quote}(hyperlaneChainDomain[_data.destinationChainId], addressToBytes32(_data.destinationGatewayAddress), payload, StandardHookMetadata.formatMetadata(GAS_LIMIT, refundAddress));
 
-        hyperlaneInterchainGasPaymaster.payForGas{ value: msg.value }(
-            // The ID of the message
-            messageId,
-            // Destination domain
-            hyperlaneChainDomain[_data.destinationChainId],
-            GAS_LIMIT,
-            // Refund the msg.sender
-            _msgSender()
-        );
     }
 
 
@@ -100,25 +208,42 @@ contract HyperlaneImpl is IMessagingImplBase {
         return bytes32(uint256(uint160(_addr)));
     }
 
+    function bytes32ToAddress(bytes32 _buf) internal pure returns (address) {
+        return address(uint160(uint256(_buf)));
+    }
+
         // Setter function for HyperlaneMailBox
     function setHyperlaneMailBox(HyperlaneMailBox _mailBox) public  onlySuperAdmin{
         hyperlaneMailBox = _mailBox;
     }
 
-    // Setter function for IInterchainGasPaymaster
-    function setHyperlaneInterchainGasPaymaster(IInterchainGasPaymaster _paymaster) public onlySuperAdmin{
-        hyperlaneInterchainGasPaymaster = _paymaster;
-    }
 
     // Setter function for updating values in hyperlaneChainDomain mapping
     function setHyperlaneChainDomain(uint256 _chainId, uint32 _chainDomain) public onlySuperAdmin{
         hyperlaneChainDomain[_chainId] = _chainDomain;
+        hyperlaneChainDomainToChainId[_chainDomain] = _chainId;
     }
 
     // Setter function for updating the GAS_LIMIT
     function setHyperlaneGasLimit(uint256 newGasLimit) public onlySuperAdmin{
         GAS_LIMIT = newGasLimit;
     }
+
+
+    //Hyperlane Reciever
+    function handle(
+            uint32 _origin,
+            bytes32 _sender,
+            bytes calldata _body
+    ) public nonReentrant{
+        require(msg.sender == address(hyperlaneMailBox), 'HyperlaneImpl: Only HyperlaneMailBox can call this function');
+        require(_sender == addressToBytes32(hyperlaneChainImplAddress[_origin]), 'HyperlaneImpl: Sender is not registered');
+        bytes32 payloadHash = keccak256(_body);
+        require(!messageSeen[payloadHash], 'Message already seen!');
+        messageSeen[payloadHash] = true;
+        ICrossSyncGateway(crossSyncGatewayAddress).handleReceive(_body);
+    }
+
     
 
 }
