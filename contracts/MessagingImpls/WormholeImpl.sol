@@ -50,17 +50,21 @@ contract WormholeImpl is IMessagingImplBase {
         GAS_LIMIT = 50_000;
     }
 
-    function executeSendMessage(ICrossSyncMessagingData calldata _data) override public payable nonReentrant returns(bytes memory){
+    function executeSendMessage(ICrossSyncMessagingData calldata _data, uint256 _gasLimit) override public payable nonReentrant returns(bytes memory){
         require(_msgSender() == crossSyncGatewayAddress, 'Only CrossSyncGateway can call this function');
-        uint256 cost = quoteCrossChainFee(wormholeChainId[_data.destinationChainId]);
-        require(msg.value > cost, 'Gas payment is less');
+        require(wormholeChainId[_data.destinationChainId] != 0, 'Wormhole Not available for this chain');
         bytes memory payload = abi.encode(_data);
+        uint256 gasLimit = _gasLimit == 0 ? defaultGasLimit : _gasLimit;
+
+        uint256 cost = quoteCrossChainFee(wormholeChainId[_data.destinationChainId], gasLimit);
+        require(msg.value > cost, 'Gas payment is less');
+
         wormholeRelayer.sendPayloadToEvm{value: cost}(
             wormholeChainId[_data.destinationChainId],
-            _data.destinationGatewayAddress,
+            wormholeChainImplAddress[_data.destinationChainId],
             payload, // payload
             0, // no receiver value needed since we're just passing a message
-            GAS_LIMIT
+            gasLimit
         );
     }
 
@@ -80,10 +84,11 @@ contract WormholeImpl is IMessagingImplBase {
     }
 
 
-    function quoteCrossChainFee(uint16 targetChain) public view returns (uint256 cost) {
+    function quoteCrossChainFee(uint16 targetChain, uint256 _gasLimit) public view returns (uint256 cost) {
         // Cost of delivering token and payload to targetChain
+
         uint256 deliveryCost;
-        (deliveryCost,) = wormholeRelayer.quoteEVMDeliveryPrice(targetChain, 0, GAS_LIMIT);
+        (deliveryCost,) = wormholeRelayer.quoteEVMDeliveryPrice(targetChain, 0, _gasLimit);
 
         // Total cost: delivery cost + cost of publishing the 'sending token' wormhole message
         cost = deliveryCost + 0;
@@ -111,6 +116,13 @@ contract WormholeImpl is IMessagingImplBase {
 
     function addressToBytes32(address _addr) internal pure returns (bytes32) {
         return bytes32(uint256(uint160(_addr)));
+    }
+
+    function getFee(ICrossSyncMessagingData calldata _data, uint256 _gasLimit) override public view returns(uint256){
+        require(wormholeChainId[_data.destinationChainId] != 0, 'Wormhole Not available for this chain');
+        uint256 gasLimit = _gasLimit == 0 ? defaultGasLimit : _gasLimit;
+        uint256 cost = quoteCrossChainFee(wormholeChainId[_data.destinationChainId], gasLimit);
+        return cost;
     }
 
 }

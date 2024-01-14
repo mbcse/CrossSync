@@ -5,9 +5,9 @@ pragma abicoder v2;
 
 
 import './interfaces/IMessagingImplBase.sol';
-import {IRouterClient} from "@chainlink/contracts-ccip/src/v0.8/ccip/interfaces/IRouterClient.sol";
-import {Client} from "@chainlink/contracts-ccip/src/v0.8/ccip/libraries/Client.sol";
-import "@openzeppelin/contracts/interfaces/IERC165.sol";
+import {IRouterClient} from '@chainlink/contracts-ccip/src/v0.8/ccip/interfaces/IRouterClient.sol';
+import {Client} from '@chainlink/contracts-ccip/src/v0.8/ccip/libraries/Client.sol';
+import '@openzeppelin/contracts/interfaces/IERC165.sol';
 import '../interfaces/ICrossSyncGateway.sol';
 
 //Chainlink CCIP Interface
@@ -39,14 +39,16 @@ contract ChainlinkCCIPImpl is IMessagingImplBase {
         chainlinkCcipRouter = IRouterClient(_chainlinkRouterAddress);
     }
 
-    function executeSendMessage(ICrossSyncMessagingData calldata _data) override public payable nonReentrant returns(bytes memory){
+    function executeSendMessage(ICrossSyncMessagingData calldata _data, uint256 _gasLimit) override public payable nonReentrant returns(bytes memory){
         require(_msgSender() == crossSyncGatewayAddress, 'Only CrossSyncGateway can call this function');
+        require(chainlinkCcipChainSelector[_data.destinationChainId] != 0, 'Chainlink CCIP Not available for this chain');
         require(msg.value > 0, 'Gas payment is required');
         bytes memory payload = abi.encode(_data);
         Client.EVM2AnyMessage memory evm2AnyMessage = _buildCCIPMessage(
-            _data.destinationGatewayAddress,
+            chainlinkCcipChainImplAddress[_data.destinationChainId],
             payload,
-            address(0)
+            address(0),
+            _gasLimit
         );
 
         bytes32 messageId = chainlinkCcipRouter.ccipSend{value: msg.value}(
@@ -60,9 +62,13 @@ contract ChainlinkCCIPImpl is IMessagingImplBase {
     function _buildCCIPMessage(
         address _receiver,
         bytes memory _payload,
-        address _feeTokenAddress
-    ) internal pure returns (Client.EVM2AnyMessage memory) {
+        address _feeTokenAddress,
+        uint256 _gasLimit
+    ) internal view returns (Client.EVM2AnyMessage memory) {
         // Create an EVM2AnyMessage struct in memory with necessary information for sending a cross-chain message
+        
+        uint256 gasLimit = _gasLimit == 0 ? defaultGasLimit : _gasLimit;
+        
         return
             Client.EVM2AnyMessage({
                 receiver: abi.encode(_receiver), // ABI-encoded receiver address
@@ -70,7 +76,7 @@ contract ChainlinkCCIPImpl is IMessagingImplBase {
                 tokenAmounts: new Client.EVMTokenAmount[](0), // Empty array aas no tokens are transferred
                 extraArgs: Client._argsToBytes(
                     // Additional arguments, setting gas limit and non-strict sequencing mode
-                    Client.EVMExtraArgsV1({gasLimit: 200_000, strict: false})
+                    Client.EVMExtraArgsV1({gasLimit: gasLimit, strict: false})
                 ),
                 // Set the feeToken to a feeTokenAddress, indicating specific asset will be used for fees
                 feeToken: _feeTokenAddress
@@ -104,6 +110,19 @@ contract ChainlinkCCIPImpl is IMessagingImplBase {
     // Interface support for CCIP chainlink Receive
     function supportsInterface(bytes4 interfaceId) public pure override returns (bool) {
         return interfaceId == type(IAny2EVMMessageReceiver).interfaceId || interfaceId == type(IERC165).interfaceId;
+    }
+
+    function getFee(ICrossSyncMessagingData calldata _data, uint256 _gasLimit) override public view returns(uint256){
+        require(chainlinkCcipChainSelector[_data.destinationChainId] != 0, 'Chainlink CCIP Not available for this chain');
+        bytes memory payload = abi.encode(_data);
+        Client.EVM2AnyMessage memory evm2AnyMessage = _buildCCIPMessage(
+            chainlinkCcipChainImplAddress[_data.destinationChainId],
+            payload,
+            address(0),
+            _gasLimit
+        );
+        uint256 fees = chainlinkCcipRouter.getFee(chainlinkCcipChainSelector[_data.destinationChainId], evm2AnyMessage);
+        return fees;
     }
 
 }

@@ -19,6 +19,8 @@ interface IMessagingImpl {
     }
 
     function executeSendMessage(
-        ICrossSyncMessagingData calldata _data) external payable returns(bytes calldata) ;
+        ICrossSyncMessagingData calldata _data, uint256 _gasLimit) external payable returns(bytes calldata) ;
+
+    function getFee(ICrossSyncMessagingData calldata _data, uint256 _gasLimit) external view returns(uint256);    
 
 }

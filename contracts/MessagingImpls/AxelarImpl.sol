@@ -6,9 +6,9 @@ pragma abicoder v2;
 
 import { IAxelarGateway } from '@axelar-network/axelar-gmp-sdk-solidity/contracts/interfaces/IAxelarGateway.sol';
 import { IAxelarGasService } from '@axelar-network/axelar-gmp-sdk-solidity/contracts/interfaces/IAxelarGasService.sol';
-import "@openzeppelin/contracts/utils/Strings.sol";
+import '@openzeppelin/contracts/utils/Strings.sol';
 
-import {AxelarExecutable} from "@axelar-network/axelar-gmp-sdk-solidity/contracts/executable/AxelarExecutable.sol";
+import {AxelarExecutable} from '@axelar-network/axelar-gmp-sdk-solidity/contracts/executable/AxelarExecutable.sol';
 
 import './interfaces/IMessagingImplBase.sol';
 import '../interfaces/ICrossSyncGateway.sol';
@@ -36,7 +36,7 @@ contract AxelarImpl is IMessagingImplBase {
 
     }
 
-    function executeSendMessage(ICrossSyncMessagingData calldata _data) override public payable nonReentrant returns(bytes memory){
+    function executeSendMessage(ICrossSyncMessagingData calldata _data, uint256 _gasLimit) override public payable nonReentrant returns(bytes memory){
         require(_msgSender() == crossSyncGatewayAddress, 'Only CrossSyncGateway can call this function');
         require(msg.value > 0, 'Gas payment is required');
         bytes memory payload = abi.encode(_data);
@@ -47,7 +47,7 @@ contract AxelarImpl is IMessagingImplBase {
             payload,
             _msgSender()
         );
-        gateway.callContract(axelarChainName[_data.destinationChainId], Strings.toHexString(_data.destinationGatewayAddress), payload);
+        gateway.callContract(axelarChainName[_data.destinationChainId], Strings.toHexString(axelarChainImplAddress[_data.destinationChainId]), payload);
     }
 
     function setAxelarChainName(uint256 _chainId, string memory _chainName) public onlySuperAdmin {
@@ -95,6 +95,10 @@ contract AxelarImpl is IMessagingImplBase {
     function stringToAddress(string memory addressString) internal returns (address) {
         address myAddress = address(bytes20(bytes(addressString)));
         return myAddress;
+    }
+    
+    function getFee(ICrossSyncMessagingData calldata _data, uint256 _gasLimit) override public view returns(uint256){
+        revert('Not Supported');
     }
 
 }

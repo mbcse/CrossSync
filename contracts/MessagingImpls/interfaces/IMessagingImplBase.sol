@@ -4,31 +4,32 @@ pragma solidity ^0.8.4;
 pragma abicoder v2;
 
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+import '@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol';
 
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import '@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol';
+import '@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol';
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-IERC20PermitUpgradeable.sol";
+import '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
+import '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-IERC20PermitUpgradeable.sol';
 
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 
-import "../../helpers/ERC2771Recipient.sol";
+import '../../helpers/ERC2771Recipient.sol';
 
-import "../../interfaces/IMessagingImpl.sol";
+import '../../interfaces/IMessagingImpl.sol';
 
 abstract contract IMessagingImplBase is IMessagingImpl, Initializable, OwnableUpgradeable, ERC2771Recipient, PausableUpgradeable, AccessControlUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable{
 
-    bytes32 public constant SUPER_ADMIN_ROLE = keccak256("SUPER_ADMIN_ROLE");
-    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
+    bytes32 public constant SUPER_ADMIN_ROLE = keccak256('SUPER_ADMIN_ROLE');
+    bytes32 public constant ADMIN_ROLE = keccak256('ADMIN_ROLE');
+    bytes32 public constant PAUSER_ROLE = keccak256('PAUSER_ROLE');
+    bytes32 public constant UPGRADER_ROLE = keccak256('UPGRADER_ROLE');
 
+    uint256 public defaultGasLimit;
 
     address public crossSyncGatewayAddress;
     address public nativeCurrencyWrappedAddress;
@@ -60,6 +61,7 @@ abstract contract IMessagingImplBase is IMessagingImpl, Initializable, OwnableUp
         nativeCurrencyWrappedAddress = _nativeCurrencyWrappedAddress;
         nativeCurrencyAddress = _nativeCurrencyAddress;
 
+        defaultGasLimit = 90_000;
     }
 
 /*
@@ -85,7 +87,7 @@ abstract contract IMessagingImplBase is IMessagingImpl, Initializable, OwnableUp
         require(
             hasRole(UPGRADER_ROLE, _msgSender()) ||
             owner() == _msgSender(),
-            "Unauthorized Access");
+            'Unauthorized Access');
         _;
     }
     /**
@@ -97,7 +99,7 @@ abstract contract IMessagingImplBase is IMessagingImpl, Initializable, OwnableUp
         require(
             hasRole(SUPER_ADMIN_ROLE, _msgSender()) ||
             owner() == _msgSender(),
-            "Unauthorized Access");
+            'Unauthorized Access');
         _;
     }
 
@@ -110,7 +112,7 @@ abstract contract IMessagingImplBase is IMessagingImpl, Initializable, OwnableUp
             hasRole(ADMIN_ROLE, _msgSender()) ||
             hasRole(SUPER_ADMIN_ROLE, _msgSender()) ||
             owner() == _msgSender(),
-            "Unauthorized Access");
+            'Unauthorized Access');
         _;
     }
 
@@ -123,7 +125,7 @@ abstract contract IMessagingImplBase is IMessagingImpl, Initializable, OwnableUp
             hasRole(PAUSER_ROLE, _msgSender()) ||
             hasRole(SUPER_ADMIN_ROLE, _msgSender()) || 
             owner() == _msgSender(),
-            "Unauthorized Access");
+            'Unauthorized Access');
         _;
     }
 
@@ -207,6 +209,10 @@ abstract contract IMessagingImplBase is IMessagingImpl, Initializable, OwnableUp
         nativeCurrencyAddress = _nativeCurrencyAddress;
     }
 
+    function setDefaultGasLimit(uint256 _defaultGasLimit) public onlySuperAdmin {
+        defaultGasLimit = _defaultGasLimit;
+    }
+
 /*
 ************************************************************** Helper Functions ***********************************************************
 */
@@ -226,6 +232,7 @@ abstract contract IMessagingImplBase is IMessagingImpl, Initializable, OwnableUp
             transferAsset.transferFrom(_from, _to, _tokenAmount);
         }
     }
+    
 
 /*
 ***************************************** Important Functions - Edit With Care ***********************************************************

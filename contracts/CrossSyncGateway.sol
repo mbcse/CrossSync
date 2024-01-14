@@ -4,28 +4,28 @@ pragma solidity ^0.8.15;
 pragma abicoder v2;
 
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
+import '@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol';
 
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import '@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol';
+import '@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol';
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-IERC20PermitUpgradeable.sol";
+import '@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol';
+import '@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-IERC20PermitUpgradeable.sol';
 
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
+import '@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol';
+import '@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol';
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
 
 
-import "./helpers/ERC2771Recipient.sol";
-import "./interfaces/ICrossSyncGateway.sol";
+import './helpers/ERC2771Recipient.sol';
+import './interfaces/ICrossSyncGateway.sol';
 
-import "./interfaces/IMessagingImpl.sol";
-import "./interfaces/ICrossSyncReceiverImplementer.sol";
+import './interfaces/IMessagingImpl.sol';
+import './interfaces/ICrossSyncReceiverImplementer.sol';
 
 
 
@@ -41,10 +41,10 @@ interface IWETH9 {
 
 contract CrossSyncGateway is ICrossSyncGateway, Initializable, OwnableUpgradeable, ERC2771Recipient, PausableUpgradeable, AccessControlUpgradeable, ReentrancyGuardUpgradeable, EIP712Upgradeable, UUPSUpgradeable {
 
-    bytes32 public constant SUPER_ADMIN_ROLE = keccak256("SUPER_ADMIN_ROLE");
-    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
+    bytes32 public constant SUPER_ADMIN_ROLE = keccak256('SUPER_ADMIN_ROLE');
+    bytes32 public constant ADMIN_ROLE = keccak256('ADMIN_ROLE');
+    bytes32 public constant PAUSER_ROLE = keccak256('PAUSER_ROLE');
+    bytes32 public constant UPGRADER_ROLE = keccak256('UPGRADER_ROLE');
 
     address public nativeCurrencyWrappedAddress;
     address public nativeCurrencyAddress;
@@ -60,12 +60,15 @@ contract CrossSyncGateway is ICrossSyncGateway, Initializable, OwnableUpgradeabl
     mapping (address => mapping(uint256 => mapping(uint256 => uint256))) public sentUserNonce; //address => srcChainId => destChainId => nonce
     mapping (address => mapping(uint256 => mapping(uint256 => bool))) public receiveUserNonceSeen; //address => srcChainId => nonce => bool
 
+    uint256 public crossSyncFeePercent; // Divided By 10000
+    address public crossSyncFeeAddress;
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
-    function initialize(string calldata _name, string calldata _version, address _nativeCurrencyWrappedAddress, address _nativeCurrencyAddress, address _owner) public initializer {
+    function initialize(string calldata _name, string calldata _version, address _nativeCurrencyWrappedAddress, address _nativeCurrencyAddress, address _owner, address _crossSyncFeeAddress) public initializer {
         __Pausable_init();
         __Ownable_init();
         __AccessControl_init();
@@ -80,7 +83,8 @@ contract CrossSyncGateway is ICrossSyncGateway, Initializable, OwnableUpgradeabl
 
         nativeCurrencyWrappedAddress = _nativeCurrencyWrappedAddress;
         nativeCurrencyAddress = _nativeCurrencyAddress;
-        
+        crossSyncFeePercent = 40; //Default to 40/10000 = 0.4%
+        crossSyncFeeAddress = _crossSyncFeeAddress;
     }
 
 /*
@@ -106,7 +110,7 @@ contract CrossSyncGateway is ICrossSyncGateway, Initializable, OwnableUpgradeabl
         require(
             hasRole(UPGRADER_ROLE, _msgSender()) ||
             owner() == _msgSender(),
-            "Unauthorized Access");
+            'Unauthorized Access');
         _;
     }
 
@@ -121,7 +125,7 @@ contract CrossSyncGateway is ICrossSyncGateway, Initializable, OwnableUpgradeabl
         require(
             hasRole(SUPER_ADMIN_ROLE, _msgSender()) ||
             owner() == _msgSender(),
-            "Unauthorized Access");
+            'Unauthorized Access');
         _;
     }
 
@@ -134,7 +138,7 @@ contract CrossSyncGateway is ICrossSyncGateway, Initializable, OwnableUpgradeabl
             hasRole(ADMIN_ROLE, _msgSender()) ||
             hasRole(SUPER_ADMIN_ROLE, _msgSender()) ||
             owner() == _msgSender(),
-            "Unauthorized Access");
+            'Unauthorized Access');
         _;
     }
 
@@ -147,7 +151,7 @@ contract CrossSyncGateway is ICrossSyncGateway, Initializable, OwnableUpgradeabl
             hasRole(PAUSER_ROLE, _msgSender()) ||
             hasRole(SUPER_ADMIN_ROLE, _msgSender()) || 
             owner() == _msgSender(),
-            "Unauthorized Access");
+            'Unauthorized Access');
         _;
     }
 
@@ -220,18 +224,26 @@ contract CrossSyncGateway is ICrossSyncGateway, Initializable, OwnableUpgradeabl
         destChainGatewayAddress[chainId] = crossSyncGatewayAddress;
     }
 
+    function setCrossSyncFee(uint256 _crossSyncFeePercent) public onlySuperAdmin {
+        crossSyncFeePercent = _crossSyncFeePercent;
+    }
+
+    function setCrossSyncFeeAddress(address _crossSyncFeeAddress) public onlySuperAdmin {
+        crossSyncFeeAddress = _crossSyncFeeAddress;
+    }
+
 /*
 ************************************************************ Adding Messaging Routes Functions ***************************************************
 */
 
     function addRoute(uint256 _routeId, address _routeAddress, string memory _routeName) public onlySuperAdmin {
-        require(_routeAddress != address(0), "Address 0 Provided");
-        require(!routes[_routeId].isValid, "Route Already Exists");
+        require(_routeAddress != address(0), 'Address 0 Provided');
+        require(!routes[_routeId].isValid, 'Route Already Exists');
         routes[_routeId] = RouteData(_routeAddress, true, _routeName);
     }
 
     function removeRoute(uint256 _routeId) public onlySuperAdmin {
-        require(routes[_routeId].isValid, "Route Does Not Exist");
+        require(routes[_routeId].isValid, 'Route Does Not Exist');
         delete routes[_routeId];
     }
 
@@ -252,18 +264,18 @@ contract CrossSyncGateway is ICrossSyncGateway, Initializable, OwnableUpgradeabl
     }
 
     function setRouteAddress(uint256 _routeId, address _routeAddress) public onlySuperAdmin {
-        require(_routeAddress != address(0), "Address 0 Provided");
-        require(routes[_routeId].isValid, "Route Does Not Exist");
+        require(_routeAddress != address(0), 'Address 0 Provided');
+        require(routes[_routeId].isValid, 'Route Does Not Exist');
         routes[_routeId].routeAddress = _routeAddress;
     }
 
     function setRouteValidity(uint256 _routeId, bool _isValid) public onlySuperAdmin {
-        require(routes[_routeId].isValid, "Route Does Not Exist");
+        require(routes[_routeId].isValid, 'Route Does Not Exist');
         routes[_routeId].isValid = _isValid;
     }
 
     function setRouteName(uint256 _routeId, string memory _routeName) public onlySuperAdmin {
-        require(routes[_routeId].isValid, "Route Does Not Exist");
+        require(routes[_routeId].isValid, 'Route Does Not Exist');
         routes[_routeId].routeName = _routeName;
     }
 
@@ -271,6 +283,7 @@ contract CrossSyncGateway is ICrossSyncGateway, Initializable, OwnableUpgradeabl
 *********************************************************  Events ***********************************************************************
 */    
 
+    event SyncFeeCollected(address from, uint256 amount, address feeAddress, uint256 indexed destinationChainId, uint256 indexed routeId, uint256 gasLimit);
 /*
 *********************************************************  Gateway Functions ***********************************************************************
 */   
@@ -283,9 +296,11 @@ contract CrossSyncGateway is ICrossSyncGateway, Initializable, OwnableUpgradeabl
 
     function _handleReceive(bytes calldata _payload) internal {
         IMessagingImpl.ICrossSyncMessagingData memory decodePayload = abi.decode(_payload, (IMessagingImpl.ICrossSyncMessagingData));
+        require(routes[decodePayload.messagingRouteId].routeAddress == _msgSender(), 'Route Address Mismatch/Invalid Caller');
+        
         require(decodePayload.destinationChainId == block.chainid, 'Destination Chain Id is not same as current chain id');
-        require(decodePayload.destinationGatewayAddress == _msgSender() && routes[decodePayload.messagingRouteId].routeAddress == _msgSender(), 'Destinatin Gateway Address(The Impl) is not the caller to gateway or is not a route address');
-
+        require(decodePayload.destinationGatewayAddress == address(this), 'Destinatin Gateway Address Mismatch');
+       
         require(!receiveUserNonceSeen[decodePayload.sender][decodePayload.sourceChainId][decodePayload.nonce], 'Receive Users Nonce is already seen for this src Chain Id');
         receiveUserNonceSeen[decodePayload.sender][decodePayload.sourceChainId][decodePayload.nonce] = true;
 
@@ -299,13 +314,48 @@ contract CrossSyncGateway is ICrossSyncGateway, Initializable, OwnableUpgradeabl
     function sendMessage( uint256 _destinationChainId,
         uint256 _routeId,
         ICrossSyncGateway.MessagingPayload memory _payload,
+        uint256 _gasLimit,
         bytes calldata _routeData) override public payable nonReentrant {
-        require(routes[_routeId].isValid, "Route Does Not Exist");
-        require(_payload.to != address(0), "Address 0 Provided");
-        require(_destinationChainId != block.chainid, "Source and Destination Chain Ids are same");
-        require(destChainGatewayAddress[_destinationChainId] != address(0), "Destination Chain Gateway Address is not set");
-        require(msg.value > 0, "Insufficient Relayer(msg.value) Fee Provided");
+        require(routes[_routeId].isValid, 'Route Does Not Exist');
+        require(_payload.to != address(0), 'Address 0 Provided');
+        require(_destinationChainId != block.chainid, 'Source and Destination Chain Ids are same');
+        require(destChainGatewayAddress[_destinationChainId] != address(0), 'Destination Chain Gateway Address is not set');
+        require(msg.value > 0, 'Relayer(msg.value) Fee can not be zero');
 
+        uint256 syncFee = getSyncFee(msg.value);
+        require(msg.value >= syncFee, 'Relayer(msg.value) Fee is less than syncFee');
+        uint256 messengerFee = msg.value - syncFee;
+        _transferNativeSyncFee(_msgSender(), _destinationChainId, _routeId, _gasLimit, syncFee);
+
+
+        IMessagingImpl.ICrossSyncMessagingData memory crossSyncPayload = IMessagingImpl.ICrossSyncMessagingData(
+            _msgSender(),
+            sentUserNonce[_msgSender()][block.chainid][_destinationChainId],
+            _routeId,
+            block.chainid,
+            _destinationChainId,
+            address(this),
+            destChainGatewayAddress[_destinationChainId], // To Be Filled By Route Impl Address
+            _payload
+        );
+
+        sentUserNonce[_msgSender()][block.chainid][_destinationChainId] += 1;
+
+        IMessagingImpl messenger = IMessagingImpl(routes[_routeId].routeAddress);
+        messenger.executeSendMessage{value: messengerFee}(crossSyncPayload, _gasLimit);
+    }
+
+    
+    function getFee(
+        uint256 _destinationChainId,
+        uint256 _routeId,
+        MessagingPayload calldata _payload,
+        uint256 _gasLimit
+    ) public override view returns(uint256){
+        require(routes[_routeId].isValid, 'Route Does Not Exist');
+        require(_payload.to != address(0), 'Address 0 Provided');
+        require(_destinationChainId != block.chainid, 'Source and Destination Chain Ids are same');
+        require(destChainGatewayAddress[_destinationChainId] != address(0), 'Destination Chain Gateway Address is not set');
 
         IMessagingImpl.ICrossSyncMessagingData memory crossSyncPayload = IMessagingImpl.ICrossSyncMessagingData(
             _msgSender(),
@@ -318,14 +368,27 @@ contract CrossSyncGateway is ICrossSyncGateway, Initializable, OwnableUpgradeabl
             _payload
         );
 
-        sentUserNonce[_msgSender()][block.chainid][_destinationChainId] += 1;
 
         IMessagingImpl messenger = IMessagingImpl(routes[_routeId].routeAddress);
-        messenger.executeSendMessage{value: msg.value}(crossSyncPayload);
+        uint256 messengerFee = messenger.getFee(crossSyncPayload, _gasLimit);
+        uint256 syncFee = getSyncFee(messengerFee);
+        uint256 finalFee = messengerFee + syncFee;
+        return finalFee;
     }
 
+    function getSyncFee(uint256 messengerFee) public view returns (uint256) {
+        // Calculate 0.4% of the value
+        uint256 syncFee = (messengerFee * crossSyncFeePercent) / 10000;
 
+        // Add the calculated value to the original value
+       return syncFee;
+    }
 
+    function _transferNativeSyncFee(address _from, uint256 _destChainId, uint256 _routeId, uint256 _gasLimit, uint256 _crossSyncFee) internal {
+        require(crossSyncFeeAddress != address(0), 'CrossSyncFee Address Is Zero Address');
+        payable(crossSyncFeeAddress).transfer(_crossSyncFee);
+        emit SyncFeeCollected(_from, _crossSyncFee, crossSyncFeeAddress, _destChainId, _routeId, _gasLimit);
+    }
 /*
 ********************************************************************** ERC20 HELPER FUNCTIONS **********************************************************************
 */

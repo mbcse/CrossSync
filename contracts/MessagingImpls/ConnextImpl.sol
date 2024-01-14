@@ -5,7 +5,7 @@ pragma abicoder v2;
 
 
 import './interfaces/IMessagingImplBase.sol';
-import {IConnext} from "@connext/interfaces/core/IConnext.sol";
+import {IConnext} from '@connext/interfaces/core/IConnext.sol';
 import '../interfaces/ICrossSyncGateway.sol';
 
 contract ConnextImpl is IMessagingImplBase {
@@ -30,13 +30,14 @@ contract ConnextImpl is IMessagingImplBase {
     }
 
 
-    function executeSendMessage(ICrossSyncMessagingData calldata _data) override public payable nonReentrant returns(bytes memory){
+    function executeSendMessage(ICrossSyncMessagingData calldata _data, uint256 _gasLimit) override public payable nonReentrant returns(bytes memory){
         require(_msgSender() == crossSyncGatewayAddress, 'Only CrossSyncGateway can call this function');
+        require(connextDestDomain[_data.destinationChainId] != 0, 'Connext Not available for this chain');
         require(msg.value > 0, 'Gas payment is required');
         bytes memory payload = abi.encode(_data);
         connext.xcall{value: msg.value}(
             connextDestDomain[_data.destinationChainId], 
-            _data.destinationGatewayAddress,
+            connextChainImplAddress[_data.destinationChainId],
             address(0),    
             _msgSender(),
             0,            
@@ -72,4 +73,8 @@ contract ConnextImpl is IMessagingImplBase {
 
         ICrossSyncGateway(crossSyncGatewayAddress).handleReceive(_callData);
     }  
+
+    function getFee(ICrossSyncMessagingData calldata _data, uint256 _gasLimit) override public view returns(uint256){
+        revert('Not Supported');
+    }
 }

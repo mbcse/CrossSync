@@ -12,7 +12,7 @@ interface HyperlaneMailBox {
         bytes32 recipient,
         bytes memory body,
         bytes calldata defaultHookMetadata
-    ) external returns (uint256 fee);
+    ) external view returns (uint256 fee);
     function dispatch(
         uint32 destination,
         bytes32 recipient,
@@ -150,7 +150,7 @@ library StandardHookMetadata {
     function formatMetadata(
         uint256 _msgValue
     ) internal view returns (bytes memory) {
-        return formatMetadata(_msgValue, uint256(0), msg.sender, "");
+        return formatMetadata(_msgValue, uint256(0), msg.sender, '');
     }
 
     /**
@@ -163,7 +163,7 @@ library StandardHookMetadata {
         uint256 _gasLimit,
         address _refundAddress
     ) internal pure returns (bytes memory) {
-        return formatMetadata(uint256(0), _gasLimit, _refundAddress, "");
+        return formatMetadata(uint256(0), _gasLimit, _refundAddress, '');
     }
 }
 
@@ -191,15 +191,16 @@ contract HyperlaneImpl is IMessagingImplBase, IMessageRecipient {
     }
 
 
-    function executeSendMessage(ICrossSyncMessagingData calldata _data) override public payable nonReentrant returns(bytes memory){
+    function executeSendMessage(ICrossSyncMessagingData calldata _data, uint256 _gasLimit) override public payable nonReentrant returns(bytes memory){
         require(_msgSender() == crossSyncGatewayAddress, 'Only CrossSyncGateway can call this function');
+        require(hyperlaneChainDomain[_data.destinationChainId] != 0, 'Hyperlane Not available for this chain');
         require(msg.value > 0, 'Gas payment is required');
         bytes memory payload = abi.encode(_data);
-       
-        address refundAddress = address(crossSyncGatewayAddress);
-        uint256 quote = hyperlaneMailBox.quoteDispatch(hyperlaneChainDomain[_data.destinationChainId], addressToBytes32(_data.destinationGatewayAddress), payload, StandardHookMetadata.formatMetadata(GAS_LIMIT, refundAddress));
-        require(address(this).balance >= quote, 'Insufficient funds to send message');
-        hyperlaneMailBox.dispatch{value: quote}(hyperlaneChainDomain[_data.destinationChainId], addressToBytes32(_data.destinationGatewayAddress), payload, StandardHookMetadata.formatMetadata(GAS_LIMIT, refundAddress));
+        uint256 gasLimit = _gasLimit == 0 ? defaultGasLimit : _gasLimit;
+        address refundAddress = _data.sender;
+        uint256 quote = hyperlaneMailBox.quoteDispatch(hyperlaneChainDomain[_data.destinationChainId], addressToBytes32(hyperlaneChainImplAddress[_data.destinationChainId]), payload, StandardHookMetadata.formatMetadata(gasLimit, refundAddress));
+        require(address(this).balance >= quote, 'Insufficient funds to send message as per quote');
+        hyperlaneMailBox.dispatch{value: quote}(hyperlaneChainDomain[_data.destinationChainId], addressToBytes32(hyperlaneChainImplAddress[_data.destinationChainId]), payload, StandardHookMetadata.formatMetadata(gasLimit, refundAddress));
 
     }
 
@@ -244,6 +245,13 @@ contract HyperlaneImpl is IMessagingImplBase, IMessageRecipient {
         ICrossSyncGateway(crossSyncGatewayAddress).handleReceive(_body);
     }
 
-    
+    function getFee(ICrossSyncMessagingData calldata _data, uint256 _gasLimit) override public view returns(uint256){
+        require(hyperlaneChainDomain[_data.destinationChainId] != 0, 'Hyperlane Not available for this chain');
+        bytes memory payload = abi.encode(_data);
+        uint256 gasLimit = _gasLimit == 0 ? defaultGasLimit : _gasLimit;
+        address refundAddress = _data.sender;
+        uint256 quote = hyperlaneMailBox.quoteDispatch(hyperlaneChainDomain[_data.destinationChainId], addressToBytes32(hyperlaneChainImplAddress[_data.destinationChainId]), payload, StandardHookMetadata.formatMetadata(gasLimit, refundAddress));
+        return quote;
+    }
 
 }
