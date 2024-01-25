@@ -170,7 +170,6 @@ library StandardHookMetadata {
 
 contract HyperlaneImpl is IMessagingImplBase, IMessageRecipient {
     HyperlaneMailBox public hyperlaneMailBox;
-    uint256 public GAS_LIMIT;
 
     mapping(uint256 => uint32) public hyperlaneChainDomain;
     mapping(uint32 => uint256) public hyperlaneChainDomainToChainId;
@@ -184,10 +183,9 @@ contract HyperlaneImpl is IMessagingImplBase, IMessageRecipient {
         _disableInitializers();
     }
 
-    function initialize(address _crossSyncGatewayAddress, address _nativeCurrencyWrappedAddress, address _nativeCurrencyAddress, address _owner, address _hyperlaneMailBoxAddress, address _hyperlaneGasPaymasterAddress) public initializer {
+    function initialize(address _crossSyncGatewayAddress, address _nativeCurrencyWrappedAddress, address _nativeCurrencyAddress, address _owner, address _hyperlaneMailBoxAddress) public initializer {
         IMessagingImplBase_init(_crossSyncGatewayAddress, _nativeCurrencyWrappedAddress, _nativeCurrencyAddress, _owner);
         hyperlaneMailBox = HyperlaneMailBox(_hyperlaneMailBoxAddress);
-        GAS_LIMIT = 50_000;
     }
 
 
@@ -218,18 +216,15 @@ contract HyperlaneImpl is IMessagingImplBase, IMessageRecipient {
         hyperlaneMailBox = _mailBox;
     }
 
-
     // Setter function for updating values in hyperlaneChainDomain mapping
     function setHyperlaneChainDomain(uint256 _chainId, uint32 _chainDomain) public onlySuperAdmin{
         hyperlaneChainDomain[_chainId] = _chainDomain;
         hyperlaneChainDomainToChainId[_chainDomain] = _chainId;
     }
 
-    // Setter function for updating the GAS_LIMIT
-    function setHyperlaneGasLimit(uint256 newGasLimit) public onlySuperAdmin{
-        GAS_LIMIT = newGasLimit;
+    function setHyperlaneChainImplAddress(uint256 _chainId, address _chainImplAddress) public onlySuperAdmin{
+        hyperlaneChainImplAddress[_chainId] = _chainImplAddress;
     }
-
 
     //Hyperlane Reciever
     function handle(

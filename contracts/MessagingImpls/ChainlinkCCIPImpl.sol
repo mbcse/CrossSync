@@ -94,6 +94,10 @@ contract ChainlinkCCIPImpl is IMessagingImplBase {
         chainlinkCcipChainSelectorToChainId[_chainSelector] = _chainId;
     }
 
+    function setChainlinkCcipChainImplAddress(uint256 _chainId, address _implAddress) public onlySuperAdmin {
+        chainlinkCcipChainImplAddress[_chainId] = _implAddress;
+    }
+
     // Chainlink CCIP Receiver
     function ccipReceive(Client.Any2EVMMessage calldata message) external nonReentrant{
         require(_msgSender() == address(chainlinkCcipRouter), 'Only ChainlinkCCIPRouter can call this function');

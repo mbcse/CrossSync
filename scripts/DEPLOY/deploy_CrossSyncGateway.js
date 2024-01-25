@@ -16,7 +16,8 @@ async function main () {
   const CHAIN_NATIVE_CURRENCY_WRAPPED_ADDRESS = deploySettings[chainId].CHAIN_NATIVE_CURRENCY_WRAPPED_ADDRESS
   const CHAIN_NATIVE_CURRENCY_ADDRESS = deploySettings[chainId].CHAIN_NATIVE_CURRENCY_ADDRESS
 
-  const OWNER_ADDRESS = deploySettings[chainId].OWNER_ADDRESS
+  const OWNER_ADDRESS = deploySettings["COMMON"].OWNER_ADDRESS
+  const FEE_ADDRESS = deploySettings["COMMON"].FEE_ADDRESS
 
 
   console.log('Deploying CrossSync Gateway Smart Contract')
@@ -28,7 +29,7 @@ async function main () {
   const gatewayABI = (await artifacts.readArtifact('CrossSyncGateway')).abi
   await saveToConfig(`CrossSyncGateway`, 'ABI', gatewayABI, chainId)
 
-  const crossSyncGatewayContract = await upgrades.deployProxy(CROSS_SYNC_GATEWAY_CONTRACT, [EIP712_NAME, EIP712_VERSION, CHAIN_NATIVE_CURRENCY_WRAPPED_ADDRESS, CHAIN_NATIVE_CURRENCY_ADDRESS, OWNER_ADDRESS], { initializer: 'initialize', kind:'uups' })
+  const crossSyncGatewayContract = await upgrades.deployProxy(CROSS_SYNC_GATEWAY_CONTRACT, [EIP712_NAME, EIP712_VERSION, CHAIN_NATIVE_CURRENCY_WRAPPED_ADDRESS, CHAIN_NATIVE_CURRENCY_ADDRESS, OWNER_ADDRESS, FEE_ADDRESS], { initializer: 'initialize', kind:'uups' })
   await crossSyncGatewayContract.deployed()
 
   await saveToConfig(`CrossSyncGateway`, 'ADDRESS', crossSyncGatewayContract.address, chainId)

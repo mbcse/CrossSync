@@ -37,7 +37,6 @@ contract WormholeImpl is IMessagingImplBase {
 
    mapping(bytes32 => mapping(bytes32 =>bool)) public messageSeen;
 
-    uint256 GAS_LIMIT;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -47,7 +46,6 @@ contract WormholeImpl is IMessagingImplBase {
     function initialize(address _crossSyncGatewayAddress, address _nativeCurrencyWrappedAddress, address _nativeCurrencyAddress, address _owner, address _wormholeRelayerAddress) public initializer {
         IMessagingImplBase_init(_crossSyncGatewayAddress, _nativeCurrencyWrappedAddress, _nativeCurrencyAddress, _owner);
         wormholeRelayer = IWormholeRelayer(_wormholeRelayerAddress);
-        GAS_LIMIT = 50_000;
     }
 
     function executeSendMessage(ICrossSyncMessagingData calldata _data, uint256 _gasLimit) override public payable nonReentrant returns(bytes memory){
@@ -78,15 +76,13 @@ contract WormholeImpl is IMessagingImplBase {
         wormholeChainIdToChainId[_wormholeChainId] = _chainId;
     }
 
-
-    function setWormholeGasLimit(uint256 newGasLimit) public onlySuperAdmin{
-        GAS_LIMIT = newGasLimit;
+    // Setter function for updating values in wormholeChainImplAddress mapping
+    function setWormholeChainImplAddress(uint256 _chainId, address _wormholeChainImplAddress) public onlySuperAdmin{
+        wormholeChainImplAddress[_chainId] = _wormholeChainImplAddress;
     }
 
-
-    function quoteCrossChainFee(uint16 targetChain, uint256 _gasLimit) public view returns (uint256 cost) {
+    function quoteCrossChainFee(uint16 targetChain, uint256 _gasLimit) internal view returns (uint256 cost) {
         // Cost of delivering token and payload to targetChain
-
         uint256 deliveryCost;
         (deliveryCost,) = wormholeRelayer.quoteEVMDeliveryPrice(targetChain, 0, _gasLimit);
 

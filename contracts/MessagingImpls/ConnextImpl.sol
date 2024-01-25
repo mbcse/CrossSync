@@ -55,6 +55,10 @@ contract ConnextImpl is IMessagingImplBase {
         connextDestDomainToChainId[_chainDomain] = _chainId;
     }
 
+    function setConnextChainImplAddress(uint256 _chainId, address _chainImplAddress) public onlySuperAdmin{
+        connextChainImplAddress[_chainId] = _chainImplAddress;
+    }
+
     // Connext Receiver
     function xReceive(
         bytes32 _transferId,

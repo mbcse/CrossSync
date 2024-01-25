@@ -33,7 +33,6 @@ async function main () {
 
   // Impl Specific
   const HYPERLANE_MAILBOX_ADDRESS = implData.MAILBOX_ADDRESS
-  const HYPERLANE_GAS_PAYMASTER_ADDRESS = implData.GAS_PAYMASTER
   // Impl Specific
 
   
@@ -46,7 +45,7 @@ async function main () {
   const implABI = (await artifacts.readArtifact(implData.SMART_CONTRACT_NAME)).abi
   await saveToConfig(implData.SMART_CONTRACT_NAME, 'ABI', implABI, chainId)
 
-  const implContract = await upgrades.deployProxy(IMPL_CONTRACT, [CROSS_SYNC_GATEWAY_ADDRESS, CHAIN_NATIVE_CURRENCY_WRAPPED_ADDRESS, CHAIN_NATIVE_CURRENCY_ADDRESS, OWNER_ADDRESS, HYPERLANE_MAILBOX_ADDRESS, HYPERLANE_GAS_PAYMASTER_ADDRESS], { initializer: 'initialize', kind:'uups' })
+  const implContract = await upgrades.deployProxy(IMPL_CONTRACT, [CROSS_SYNC_GATEWAY_ADDRESS, CHAIN_NATIVE_CURRENCY_WRAPPED_ADDRESS, CHAIN_NATIVE_CURRENCY_ADDRESS, OWNER_ADDRESS, HYPERLANE_MAILBOX_ADDRESS], { initializer: 'initialize', kind:'uups' })
   await implContract.deployed()
 
   await saveToConfig(implData.SMART_CONTRACT_NAME, 'ADDRESS', implContract.address, chainId)
