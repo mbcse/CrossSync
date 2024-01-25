@@ -38,7 +38,7 @@ async function main () {
   
   console.log(`DEPLOYING ${ImplName} IMPL SMART CONTRACT`)
   const {payDeployer} =  await getNamedSigners();
-
+  console.log('Deploying using Owner Address: ', payDeployer.address)
   const IMPL_CONTRACT = await ethers.getContractFactory(implData.SMART_CONTRACT_NAME)
   IMPL_CONTRACT.connect(payDeployer)
 

@@ -22,6 +22,7 @@ async function main () {
 
   console.log('Deploying CrossSync Gateway Smart Contract')
   const {payDeployer} =  await getNamedSigners();
+  console.log('Deploying using Owner Address: ', payDeployer.address)
 
   const CROSS_SYNC_GATEWAY_CONTRACT = await ethers.getContractFactory('CrossSyncGateway')
   CROSS_SYNC_GATEWAY_CONTRACT.connect(payDeployer)
