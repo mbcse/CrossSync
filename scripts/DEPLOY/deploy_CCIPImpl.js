@@ -6,6 +6,7 @@ const readFromConfig = require('../../utils/readFromConfig')
 const generateRandomId = require('../../utils/randomIdGenerator')
 
 const deploySettings = require('../deploySettings')
+const sleep = require('../../utils/sleep')
 
 let args = process.argv.slice(2);
 
@@ -27,7 +28,7 @@ async function main () {
   const CHAIN_NATIVE_CURRENCY_WRAPPED_ADDRESS = deploySettings[chainId].CHAIN_NATIVE_CURRENCY_WRAPPED_ADDRESS
   const CHAIN_NATIVE_CURRENCY_ADDRESS = deploySettings[chainId].CHAIN_NATIVE_CURRENCY_ADDRESS
 
-  const OWNER_ADDRESS = deploySettings[chainId].OWNER_ADDRESS
+  const OWNER_ADDRESS = deploySettings["COMMON"].OWNER_ADDRESS
   const CROSS_SYNC_GATEWAY_ADDRESS = await readFromConfig('CrossSyncGateway', 'ADDRESS', chainId)
 
 
@@ -52,6 +53,8 @@ async function main () {
   let crossSyncGatewayContract = await ethers.getContractFactory("CrossSyncGateway");
   crossSyncGatewayContract = crossSyncGatewayContract.attach(CROSS_SYNC_GATEWAY_ADDRESS)
   crossSyncGatewayContract.connect(payDeployer)
+  
+  await sleep(20000)
 
   const routeData = await crossSyncGatewayContract.getRoute(routeID)
   if(routeData[0] === "0x0000000000000000000000000000000000000000") {

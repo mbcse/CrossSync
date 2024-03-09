@@ -1,8 +1,8 @@
 module.exports = {
 
     COMMON: {
-        OWNER_ADDRESS: "0x8FAab0963aE8296Cd504559324c2572929B489a3",
-        FEE_ADDRESS: ""
+        OWNER_ADDRESS: "0x8137147256EF84caea5322C4A9BE7209f0709dd7",
+        FEE_ADDRESS: "0x8137147256EF84caea5322C4A9BE7209f0709dd7"
     },
 
     80001: {
@@ -52,8 +52,8 @@ module.exports = {
 
     534351: {
         ALL_CHAIN_DEPLOY_SCRIPT_ALLOWED: true,
-        CHAIN_NAME: "SCROLL",
-        NETWORK_NAME: "scroll_testnet",
+        CHAIN_NAME: "SCROLL_SEPOLIA",
+        NETWORK_NAME: "scroll_sepolia",
         EIP712_NAME : "CrossSyncGateway",
         EIP712_VERSION : "0",
         CHAIN_NATIVE_CURRENCY_WRAPPED_ADDRESS: "0x0000000000000000000000000000000000001010",
@@ -79,7 +79,7 @@ module.exports = {
 
     5001: {
         ALL_CHAIN_DEPLOY_SCRIPT_ALLOWED: true,
-        CHAIN_NAME: "MANTLE",
+        CHAIN_NAME: "MANTLE_TESTNET",
         NETWORK_NAME: "mantle_testnet",
         EIP712_NAME : "CrossSyncGateway",
         EIP712_VERSION : "0",
@@ -172,7 +172,7 @@ module.exports = {
 
     97: {
         ALL_CHAIN_DEPLOY_SCRIPT_ALLOWED: true,
-        CHAIN_NAME: "BINANACE",
+        CHAIN_NAME: "BINANACE_TESTNET",
         NETWORK_NAME: "binance_testnet",
         EIP712_NAME : "CrossSyncGateway",
         EIP712_VERSION : "0",
@@ -210,7 +210,7 @@ module.exports = {
 
     43113: {
         ALL_CHAIN_DEPLOY_SCRIPT_ALLOWED: true,
-        CHAIN_NAME: "AVALANCHE",
+        CHAIN_NAME: "AVALANCHE_TESTNET",
         NETWORK_NAME: "avalanche_testnet",
         EIP712_NAME : "CrossSyncGateway",
         EIP712_VERSION : "0",
@@ -242,14 +242,40 @@ module.exports = {
                 ROUTER_ADDRESS: "0xF694E193200268f9a4868e4Aa017A0118C9a8177",
                 CCIP_CHAIN_SELECTOR: '14767482510784806043'
             },
+
+            TELEPORTER: {
+                SMART_CONTRACT_NAME: "TeleporterImpl",
+                SMART_CONTRACT_PATH: "contracts/MessagingImpls/TeleporterImpl.sol",
+                TELEPORTER_BLOCKCHAIN_ID: "0x7fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d5",
+                TELEPORTER_ADDRESS: "0x253b2784c75e510dD0fF1da844684a1aC0aa5fcf",
+            }
+        }
+
+    },
+
+    779672: {
+        ALL_CHAIN_DEPLOY_SCRIPT_ALLOWED: true,
+        CHAIN_NAME: "DISPATCH_SUBNET",
+        NETWORK_NAME: "dispatch_subnet",
+        EIP712_NAME : "CrossSyncGateway",
+        EIP712_VERSION : "0",
+        CHAIN_NATIVE_CURRENCY_WRAPPED_ADDRESS: "0x0000000000000000000000000000000000001010",
+        CHAIN_NATIVE_CURRENCY_ADDRESS: "0x0000000000000000000000000000000000001010",
+        MESSENGERS: {
+            TELEPORTER: {
+                SMART_CONTRACT_NAME: "TeleporterImpl",
+                SMART_CONTRACT_PATH: "contracts/MessagingImpls/TeleporterImpl.sol",
+                TELEPORTER_BLOCKCHAIN_ID: "0x9f3be606497285d0ffbb5ac9ba24aa60346a9b1812479ed66cb329f394a4b1c7",
+                TELEPORTER_ADDRESS: "0x253b2784c75e510dD0fF1da844684a1aC0aa5fcf",
+            }
         }
 
     },
 
     421613: {
         ALL_CHAIN_DEPLOY_SCRIPT_ALLOWED: true,
-        CHAIN_NAME: "ARBITRUM",
-        NETWORK_NAME: "arbitrum_testnet",
+        CHAIN_NAME: "ARBITRUM_GOERLI",
+        NETWORK_NAME: "arbitrum_goerli",
         EIP712_NAME : "CrossSyncGateway",
         EIP712_VERSION : "0",
         CHAIN_NATIVE_CURRENCY_WRAPPED_ADDRESS: "0x0000000000000000000000000000000000001010",
@@ -279,7 +305,20 @@ module.exports = {
                 SMART_CONTRACT_PATH: "contracts/MessagingImpls/HyperlaneImpl.sol",
                 MAILBOX_ADDRESS: "0x13dABc0351407d5aAa0A50003a166A73b4febfDc",
                 HYPERLANE_DOMAIN_ID: 421613
-            },
+            }
+        }
+
+    },
+
+    421614: {
+        ALL_CHAIN_DEPLOY_SCRIPT_ALLOWED: true,
+        CHAIN_NAME: "ARBITRUM_SEPOLIA",
+        NETWORK_NAME: "arbitrum_sepolia",
+        EIP712_NAME : "CrossSyncGateway",
+        EIP712_VERSION : "0",
+        CHAIN_NATIVE_CURRENCY_WRAPPED_ADDRESS: "0x0000000000000000000000000000000000001010",
+        CHAIN_NATIVE_CURRENCY_ADDRESS: "0x0000000000000000000000000000000000001010",
+        MESSENGERS: {
             CCIP: {
                 SMART_CONTRACT_NAME: "ChainlinkCCIPImpl",
                 SMART_CONTRACT_PATH: "contracts/MessagingImpls/ChainlinkCCIPImpl.sol",
@@ -290,10 +329,11 @@ module.exports = {
 
     },
 
+
     420: {
         ALL_CHAIN_DEPLOY_SCRIPT_ALLOWED: true,
-        CHAIN_NAME: "OPTIMISM",
-        NETWORK_NAME: "optimism_testnet",
+        CHAIN_NAME: "OPTIMISM_GOERLI",
+        NETWORK_NAME: "optimism_goerli",
         EIP712_NAME : "CrossSyncGateway",
         EIP712_VERSION : "0",
         CHAIN_NATIVE_CURRENCY_WRAPPED_ADDRESS: "0x0000000000000000000000000000000000001010",
@@ -336,8 +376,8 @@ module.exports = {
 
     84531: {
         ALL_CHAIN_DEPLOY_SCRIPT_ALLOWED: true,
-        CHAIN_NAME: "BASE",
-        NETWORK_NAME: "base_testnet",
+        CHAIN_NAME: "BASE_GOERLI",
+        NETWORK_NAME: "base_goerli",
         EIP712_NAME : "CrossSyncGateway",
         EIP712_VERSION : "0",
         CHAIN_NATIVE_CURRENCY_WRAPPED_ADDRESS: "0x0000000000000000000000000000000000001010",
@@ -394,8 +434,8 @@ module.exports = {
 
     59140: {
         ALL_CHAIN_DEPLOY_SCRIPT_ALLOWED: true,
-        CHAIN_NAME: "LINEA",
-        NETWORK_NAME: "linea_testnet",
+        CHAIN_NAME: "LINEA_GOERLI",
+        NETWORK_NAME: "linea_goerli",
         EIP712_NAME : "CrossSyncGateway",
         EIP712_VERSION : "0",
         CHAIN_NATIVE_CURRENCY_WRAPPED_ADDRESS: "0x0000000000000000000000000000000000001010",
@@ -419,7 +459,7 @@ module.exports = {
     },
 
     11155111: {
-        ALL_CHAIN_DEPLOY_SCRIPT_ALLOWED: false,
+        ALL_CHAIN_DEPLOY_SCRIPT_ALLOWED: true,
         CHAIN_NAME: "SEPOLIA",
         NETWORK_NAME: "sepolia",
         EIP712_NAME : "CrossSyncGateway",

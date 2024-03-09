@@ -105,6 +105,40 @@ module.exports = {
       RPC_URL: process.env.MANTLE_TESTNET_RPC_URL,
       CHAIN_ID: 5001
     },
+
+    ARBITRUM_GOERLI: {
+      RPC_URL: process.env.ARBITRUM_GOERLI_RPC_URL,
+      CHAIN_ID: 421613
+    },
+    ARBITRUM_SEPOLIA: {
+      RPC_URL: process.env.ARBITRUM_SEPOLIA_RPC_URL,
+      CHAIN_ID: 421614
+    },
+    OPTIMISM_GOERLI: {
+      RPC_URL: process.env.OPTIMISM_GOERLI_RPC_URL,
+      CHAIN_ID: 420
+    },
+    FILECOIN_TESTNET: {
+      RPC_URL: process.env.FILECOIN_TESTNET_RPC_URL,
+      CHAIN_ID: 314159
+    },
+    BASE_GOERLI: {
+      RPC_URL: process.env.BASE_GOERLI_RPC_URL,
+      CHAIN_ID: 84531
+    },
+    BASE_SEPOLIA: {
+      RPC_URL: process.env.BASE_SEPOLIA_RPC_URL,
+      CHAIN_ID: 84532
+    },
+    LINEA_GOERLI: {
+      RPC_URL: process.env.LINEA_GOERLI_RPC_URL,
+      CHAIN_ID: 59140
+    },
+    AVALANCHE_TESTNET:{
+      RPC_URL: process.env.AVALANCHE_TESTNET_RPC_URL,
+      CHAIN_ID: 43113
+    },
+    
   },
 
   PRIVATE_KEYS: privateKeys,

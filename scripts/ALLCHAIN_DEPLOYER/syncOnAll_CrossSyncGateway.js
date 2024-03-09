@@ -12,7 +12,7 @@ async function main () {
       try {
           if(key !== 'COMMON' && deploySettings[key].ALL_CHAIN_DEPLOY_SCRIPT_ALLOWED){
             console.log(`Executing on chainId ${key}`)
-            await runCommand(`npx hardhat run scripts/DATA_SYNCER/syncrossSyncGatewayData.js --network ${deploySettings[key].NETWORK_NAME}`)
+            await runCommand(`npx hardhat run scripts/DATA_SYNCER/syncCrossSyncGatewayData.js --network ${deploySettings[key].NETWORK_NAME}`)
             console.log(`Execution Completed on chainId ${key}`)
           }
       } catch (error) {

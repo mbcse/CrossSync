@@ -19,7 +19,7 @@ const getFieldPath = (fieldType) => {
 
 async function readFromConfig (contractName, fieldType, chainId) {
   const path = getFieldPath(fieldType)
-  console.log(contractName, fieldType, chainId, path)
+  // console.log(contractName, fieldType, chainId, path)
   try {
     if (!await checkFileExists(path)) {
       await fs.writeFile(path, JSON.stringify({}, null, 4))

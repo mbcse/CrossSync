@@ -7,29 +7,62 @@
       "inputs": [
         {
           "internalType": "uint32",
-          "name": "_destination",
+          "name": "destination",
           "type": "uint32"
         },
         {
           "internalType": "bytes32",
-          "name": "_recipient",
+          "name": "recipient",
           "type": "bytes32"
         },
         {
           "internalType": "bytes",
-          "name": "_body",
+          "name": "body",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "defaultHookMetadata",
           "type": "bytes"
         }
       ],
       "name": "dispatch",
-      "outputs": [
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "destination",
+          "type": "uint32"
+        },
         {
           "internalType": "bytes32",
-          "name": "",
+          "name": "recipient",
           "type": "bytes32"
+        },
+        {
+          "internalType": "bytes",
+          "name": "body",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "defaultHookMetadata",
+          "type": "bytes"
         }
       ],
-      "stateMutability": "nonpayable",
+      "name": "quoteDispatch",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "fee",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     }
   ],

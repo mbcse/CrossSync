@@ -25,6 +25,15 @@ async function runCommand(command, args) {
     childProcess.on('error', (error) => {
       reject(new Error(`Error executing command: ${error.message}`));
     });
+
+    childProcess.on('disconnect', () => {
+      console.log('Child process disconnected');
+    });
+
+    childProcess.on('message', (message) => {
+      console.log(`Received message from child process: ${message}`);
+    });
+    
   });
 }
 
