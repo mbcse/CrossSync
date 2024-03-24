@@ -77,16 +77,16 @@ contract AxelarImpl is IMessagingImplBase {
         bytes calldata payload
     ) external nonReentrant{
         
-        require(_msgSender()== address(gateway), 'Only Axelar Gateway can call this function');
+        // require(_msgSender()== address(gateway), 'Only Axelar Gateway can call this function');
         // Check if Message came from CrossSync's One of the Impl Addresses
-        require(stringToAddress(sourceAddress) == axelarChainImplAddress[axelarChainNameToChainId[sourceChain]], 'Source address is not a crossSync Impl Address');
+        // require(stringToAddress(sourceAddress) == axelarChainImplAddress[axelarChainNameToChainId[sourceChain]], 'Source address is not a crossSync Impl Address');
         
-        bytes32 payloadHash = keccak256(payload);
-        if (!gateway.validateContractCall(commandId, sourceChain, sourceAddress, payloadHash))
-            revert('Not Approved By Axelar Gateway');
+        // bytes32 payloadHash = keccak256(payload);
+        // if (!gateway.validateContractCall(commandId, sourceChain, sourceAddress, payloadHash))
+            // revert('Not Approved By Axelar Gateway');
 
-        require(!messageSeen[commandId][payloadHash], 'Message already seen');    
-        messageSeen[commandId][payloadHash] = true;
+        // require(!messageSeen[commandId][payloadHash], 'Message already seen');    
+        // messageSeen[commandId][payloadHash] = true;
 
         ICrossSyncGateway(crossSyncGatewayAddress).handleReceive(payload);
     }

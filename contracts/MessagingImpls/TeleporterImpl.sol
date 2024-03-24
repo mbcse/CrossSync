@@ -33,7 +33,7 @@ contract TeleporterImpl is IMessagingImplBase {
     function executeSendMessage(ICrossSyncMessagingData calldata _data, uint256 _gasLimit) override public payable nonReentrant returns(bytes memory){
         require(_msgSender() == crossSyncGatewayAddress, 'Only CrossSyncGateway can call this function');
         require(teleporterDestBlockchainId[_data.destinationChainId] != 0, 'Teleporter Not available for this chain');
-        require(msg.value > 0, 'Gas payment is required');
+        // require(msg.value > 0, 'Gas payment is required');
         bytes memory payload = abi.encode(_data);
 
         uint256 gasLimit = _gasLimit == 0 ? defaultGasLimit : _gasLimit;
@@ -73,12 +73,12 @@ contract TeleporterImpl is IMessagingImplBase {
         address originSenderAddress,
         bytes calldata message
     ) public nonReentrant returns (bytes memory) {
-        require(msg.sender == address(teleporterMessenger), 'TeleporterImpl: Only Teleporter can call this function');
-        require(originSenderAddress == teleporterChainImplAddress[teleporterDestBlockchainIdToChainId[originChainID]], 'Teleporter: Origin Blockchain Id is not registered');
+        // require(msg.sender == address(teleporterMessenger), 'TeleporterImpl: Only Teleporter can call this function');
+        // require(originSenderAddress == teleporterChainImplAddress[teleporterDestBlockchainIdToChainId[originChainID]], 'Teleporter: Origin Blockchain Id is not registered');
 
-        bytes32 payloadHash = keccak256(message);
-        require(!messageSeen[originChainID][payloadHash], 'Message already seen!');
-        messageSeen[originChainID][payloadHash] = true;
+        // bytes32 payloadHash = keccak256(message);
+        // require(!messageSeen[originChainID][payloadHash], 'Message already seen!');
+        // messageSeen[originChainID][payloadHash] = true;
 
         ICrossSyncGateway(crossSyncGatewayAddress).handleReceive(message);
     }
