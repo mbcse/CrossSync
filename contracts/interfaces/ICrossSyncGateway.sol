@@ -20,6 +20,14 @@ interface ICrossSyncGateway is ICrossSyncReceiver {
         bytes calldata _routeData
     ) external payable;
 
+    // function sendMessageUsingManualMultiHop(
+    //     uint256[] memory _destinationChainIds,
+    //     uint256[] memory _routeIds,
+    //     MessagingPayload calldata _payload,
+    //     uint256 gasLimit,
+    //     bytes[] calldata _routeData
+    // ) external payable;
+
     function getFee(
         uint256 _destinationChainId,
         uint256 _routeId,

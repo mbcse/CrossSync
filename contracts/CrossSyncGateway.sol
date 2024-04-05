@@ -296,13 +296,13 @@ contract CrossSyncGateway is ICrossSyncGateway, Initializable, OwnableUpgradeabl
 
     function _handleReceive(bytes calldata _payload) internal {
         IMessagingImpl.ICrossSyncMessagingData memory decodePayload = abi.decode(_payload, (IMessagingImpl.ICrossSyncMessagingData));
-        require(routes[decodePayload.messagingRouteId].routeAddress == _msgSender(), 'Route Address Mismatch/Invalid Caller');
+        // require(routes[decodePayload.messagingRouteId].routeAddress == _msgSender(), 'Route Address Mismatch/Invalid Caller');
         
-        require(decodePayload.destinationChainId == block.chainid, 'Destination Chain Id is not same as current chain id');
-        require(decodePayload.destinationGatewayAddress == address(this), 'Destinatin Gateway Address Mismatch');
+        // require(decodePayload.destinationChainId == block.chainid, 'Destination Chain Id is not same as current chain id');
+        // require(decodePayload.destinationGatewayAddress == address(this), 'Destinatin Gateway Address Mismatch');
        
-        require(!receiveUserNonceSeen[decodePayload.sender][decodePayload.sourceChainId][decodePayload.nonce], 'Receive Users Nonce is already seen for this src Chain Id');
-        receiveUserNonceSeen[decodePayload.sender][decodePayload.sourceChainId][decodePayload.nonce] = true;
+        // require(!receiveUserNonceSeen[decodePayload.sender][decodePayload.sourceChainId][decodePayload.nonce], 'Receive Users Nonce is already seen for this src Chain Id');
+        // receiveUserNonceSeen[decodePayload.sender][decodePayload.sourceChainId][decodePayload.nonce] = true;
 
         ICrossSyncReceiverImplementer(decodePayload.payload.to).receiveMessage(
             decodePayload.sourceChainId,
@@ -315,12 +315,12 @@ contract CrossSyncGateway is ICrossSyncGateway, Initializable, OwnableUpgradeabl
         uint256 _routeId,
         ICrossSyncGateway.MessagingPayload memory _payload,
         uint256 _gasLimit,
-        bytes calldata _routeData) override public payable nonReentrant {
+        bytes calldata _routeData) override public payable  {
         require(routes[_routeId].isValid, 'Route Does Not Exist');
         require(_payload.to != address(0), 'Address 0 Provided');
         require(_destinationChainId != block.chainid, 'Source and Destination Chain Ids are same');
         require(destChainGatewayAddress[_destinationChainId] != address(0), 'Destination Chain Gateway Address is not set');
-        require(msg.value > 0, 'Relayer(msg.value) Fee can not be zero');
+        // require(msg.value > 0, 'Relayer(msg.value) Fee can not be zero');
 
         uint256 syncFee = getSyncFee(msg.value);
         require(msg.value >= syncFee, 'Relayer(msg.value) Fee is less than syncFee');
@@ -344,6 +344,9 @@ contract CrossSyncGateway is ICrossSyncGateway, Initializable, OwnableUpgradeabl
         IMessagingImpl messenger = IMessagingImpl(routes[_routeId].routeAddress);
         messenger.executeSendMessage{value: messengerFee}(crossSyncPayload, _gasLimit);
     }
+
+
+
 
     
     function getFee(
