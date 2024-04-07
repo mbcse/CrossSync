@@ -33,8 +33,7 @@ async function main () {
 
 
   // Impl Specific
-  const TELEPORTER_ADDRESS = implData.GATEWAY_ADDRESS
-  const TELEPORTER_BLOCKCHAIN_ID = implData.TELEPORTER_BLOCKCHAIN_ID
+  const TELEPORTER_ADDRESS = implData.TELEPORTER_ADDRESS
   // Impl Specific
   console.log(`DEPLOYING ${ImplName} IMPL SMART CONTRACT`)
   const {payDeployer} =  await getNamedSigners();
