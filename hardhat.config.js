@@ -256,6 +256,12 @@ module.exports = {
       timeout: 500000
     },
 
+    dispatch_subnet: {
+      url: "https://subnets.avax.network/dispatch/testnet/rpc",
+      accounts: getPrivateKeys(),
+      timeout: 0
+    },
+
     custom: {
       url: config.NETWORKS.CUSTOM.RPC_URL || '',
       accounts: getPrivateKeys()
@@ -277,7 +283,8 @@ module.exports = {
       celo_mainnet: config.CELOSCAN_API_KEY,
       mantle_testnet: config.MANTLESCAN_API_KEY,
       zkevm_testnet: config.ZKEVMSCAN_API_KEY,
-      scroll_testnet : config.SCROLLSCAN_API_KEY
+      scroll_testnet : config.SCROLLSCAN_API_KEY,
+      avalancheFujiTestnet: "snowtrace"
     },
     customChains: [
       {
@@ -326,6 +333,14 @@ module.exports = {
         urls: {
           apiURL: "https://api-sepolia.scrollscan.com/api",
           browserURL: "https://sepolia.scrollscan.com/"
+        }
+      },
+      {
+        network: "avalancheFujiTestnet",
+        chainId: 43113,
+        urls: {
+          apiURL: "https://api.routescan.io/v2/network/testnet/evm/43113/etherscan",
+          browserURL: "https://testnet.snowtrace.io"
         }
       }
     ]
